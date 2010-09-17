@@ -1,11 +1,22 @@
 var sys = require('sys'),
 	//http=require('http'),
-	//fs=require('fs'),
+	fs=require('fs'),
 	//url=require('url'),
 	qs = require('querystring'),
 	template = require('./lib/template'),
 	nerve = require('./lib/nerve'),
 	db = require('./db-access');
+
+var simpleCat=function(filePath){
+	return ''+fs.readFileSync(filePath);
+};
+
+var testCat=function(req, res) {
+	res.writeHead(200,{'content-type':'text/html'});
+	var t = simpleCat('./test.html');
+	sys.puts(t);
+	res.end(template.create(t,{word:"cat"}));
+};
 
 var getPostParams = function(req, callback) {
 	var body='';
@@ -43,6 +54,7 @@ var createLesson = function(req, res) {
 // Nerve URL Routing
 nerve.create([
 	[ "/", serveLessonList ],
+	[ "/cat/", testCat ],
 	//[ nerve.post("/add-user"), addUser ],
 	[ nerve.get(/^\/lesson\/([0-9]+)/), serveLesson ],
 	[ nerve.post("/add-lesson"), createLesson ]

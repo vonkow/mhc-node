@@ -65,6 +65,7 @@ exports.addLesson = function(obj, callback) {
 	})
 };
 
+
 exports.addUser = function(obj, callback) {
 	var r = redis.createClient();
 	r.stream.addListener('connect', function() {
@@ -77,4 +78,7 @@ exports.addUser = function(obj, callback) {
 			});
 		});
 	});
+};
+
+exports.addTestAttempt = function(obj, callback) {
 };
