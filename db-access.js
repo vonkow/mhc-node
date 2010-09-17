@@ -6,13 +6,21 @@ exports.getLessonList = function(callback) {
 	var arr = [];
 	r.stream.addListener('connect', function() {
 		r.get('cur.lesson.id', function(err, id) {
+			id=parseInt(id);
 			var len=id+1;
+			sys.puts(len+' '+id);
 			for (var x=1;x<len;x++) {
-				r.get('lesson:'+x+':name', function(err, name) {
-					arr.push([x, name]);
-				})
+				if (x+1!=len) {
+					r.get('lesson:'+x+':name', function(err, name) {
+						arr.push({'id':arr.length+1, 'name':''+name});
+					})
+				} else {
+					r.get('lesson:'+x+':name', function(err, name) {
+						arr.push({'id':arr.length+1, 'name':''+name});
+						r.close();
+					})
+				}
 			};
-			r.close();
 		});
 	})
 	.addListener('end', function() {
@@ -31,10 +39,10 @@ exports.getLesson = function(id, callback) {
 	var obj = {};
 	r.stream.addListener('connect', function(){
 		r.get('lesson:'+id+':name', function(err, name) {
-			obj.name = name;
+			obj.name = ''+name;
 		});
 		r.get('lesson:'+id+':intro', function(err, intro) {
-			obj.intro = intro;
+			obj.intro = ''+intro;
 		});
 		r.lrange('lesson:'+id+':q', 0, -1, function(err, q) {
 			obj.q=q;

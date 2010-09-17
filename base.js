@@ -43,6 +43,16 @@ var serveLessonList = function(req, res) {
 	});
 };
 
+var showLesson = function(req,res,l_id) {
+	db.getLessonList(function(l_list) {
+		db.getLesson(l_id, function(lesson) {
+			var t = simpleCat('./lesson.html');
+			res.writeHead(200, {'content-type':'text/html'});
+			res.end(template.create(t,{lesson:lesson,l_id:l_id,l_list:l_list}));
+		})
+	})
+};
+
 var createLesson = function(req, res) {
 	getPostParams(req, function(obj) {
 		db.addLesson(obj, function() {
@@ -56,6 +66,6 @@ nerve.create([
 	[ "/", serveLessonList ],
 	[ "/cat/", testCat ],
 	//[ nerve.post("/add-user"), addUser ],
-	[ nerve.get(/^\/lesson\/([0-9]+)/), serveLesson ],
+	[ nerve.get(/^\/lesson\/([0-9]+)/), showLesson ],
 	[ nerve.post("/add-lesson"), createLesson ]
 ]).listen(8000);

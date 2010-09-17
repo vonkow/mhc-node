@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 var cvk = {
 	g: function(id) {
 		return document.getElementById(id);
@@ -20,4 +21,3 @@ var test = {
 var cBody = cvk.g('content-body'),
 	cMenu = cvk.g('content-menu');
 cvk.wipe(cBody);
-
