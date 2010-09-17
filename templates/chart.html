@@ -1,0 +1,78 @@
+<head>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script> 
+	<script type="text/javascript" src="js/highcharts.js"></script> 
+	<script>
+		var chart;
+		$(document).ready(function() {
+			chart=new Highcharts.Chart({
+				chart: {
+					renderTo: 'chart',
+					defaultSeriesType: 'column'
+				},
+				title: {
+					text: 'Results'
+				},
+				subtitle: {
+					text: 'Test #'
+				},
+				xAxis: {
+					/*min: 0,
+					allowDecimals: false,*/
+					categories: [
+						'1',
+						'2',
+						'3',
+						'4',
+						'5'
+					],
+					title: {
+						text: 'Attempts'
+					}
+				},
+				yAxis: {
+					min: 0,
+					title: {
+						text: 'Questions'
+					}
+				},
+				legend: {
+					layout: 'vertical',
+					backgroundColor: '#FFFFFF',
+					align: 'left',
+					verticalAlign: 'top',
+					x: 100,
+					y: 50
+				},
+				tooltip: {
+					formatter: function() {
+						return '<b>Attempt '+this.x+'</b><br>'+
+								this.series.name+': '+this.y+'<br>'+
+								'Total: '+this.point.stackTotal;
+					}
+				},
+				plotOptions: {
+					column: {
+						/*
+						pointPadding: 0.2,
+						borderWidth: 0
+						*/
+						stacking: 'normal'
+					}
+				},
+				series: [
+					{
+						name: 'Incorrect',
+						data: [2,3,4,4,4]
+					},
+					{
+						name: 'Correct',
+						data: [2,4,6,8,16]
+					}
+				]
+			});
+		});
+	</script>
+</head>
+<body>
+	<div id="chart" style="width:800px; height:400px; margin: 0 auto;"></div>
+</body>

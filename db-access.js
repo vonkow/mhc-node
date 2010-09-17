@@ -79,13 +79,29 @@ exports.addUser = function(obj, callback) {
 	r.stream.addListener('connect', function() {
 		r.incr('cur.user.id', function(err, id) {
 			r.set('user:'+id+':uname', obj.uname, function() {
-				r.set('user.by.uname:'+obj.uname, id, function(){});
-			});
-			r.set('user:'+id+':pword', obj.pword, function(){
-				callback();
+				r.set('user.by.uname:'+obj.uname, id, function(){
+					r.set('user:'+id+':pword', obj.pword, function(){
+						callback();
+					});
+				});
 			});
 		});
 	});
+};
+
+exports.checkLogin = function(uname, pword, callback) {
+	var r = redis.createClient();
+	r.stream.addListener('connect', function() {
+		r.get('user.by.uname'+uname, function(err, id){
+			r.get('user:'+id+':pword', function(err, dpword) {
+				if (pword==dpword) {
+					//We're good, save to session and redirect;
+				} else {
+					// WRONG!!! Re-direct back to login
+				};
+			})
+		})
+	})
 };
 
 exports.addTestAttempt = function(obj, callback) {
