@@ -132,3 +132,44 @@ exports.addTestAttempt = function(obj, callback) {
 		})
 	})
 };
+
+exports.getTestResults = function(obj, callback) {
+	var arr = [],
+		r = redis.createClient();
+	r.stream.addListener('connect', function() {
+		r.get('user:'+obj.uid+':tests:'+obj.test+':cur.attempt', function(err, tot) {
+			for (var x=1;x<tot+1;x++) {
+				if (x+1!=tot) {
+					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
+					r.get(s+':total', function(err, total) {
+						r.get(s+':correct', function(err, correct) {
+							r.get(s+':results', function(err, results) {
+								arr.push({
+									total: total,
+									correct: correct,
+									results: JSON.parse(results)
+								});
+							})
+						})
+					})
+				} else {
+					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
+					r.get(s+':total', function(err, total) {
+						r.get(s+':correct', function(err, correct) {
+							r.get(s+':results', function(err, results) {
+								arr.push({
+									total: total,
+									correct: correct,
+									results: JSON.parse(results)
+								});
+								r.close();
+							})
+						})
+					})
+				}
+			}
+		})
+	}).addListener('end', function() {
+		callback(results);
+	})
+};
