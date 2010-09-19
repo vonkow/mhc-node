@@ -1,6 +1,27 @@
 var redis = require('./lib/redis-client'),
 	sys = require('sys');
 
+// Getters
+exports.checkLogin = function(uname, pword, callback) {
+	var r = redis.createClient();
+	r.stream.addListener('connect', function() {
+		sys.puts(uname)
+		r.get('user.by.uname:'+uname, function(err, id){
+			sys.puts(id);
+			r.get('user:'+id+':pword', function(err, dpword) {
+				sys.puts(pword+' '+dpword);
+				if (pword==dpword) {
+					//We're good, save to session and redirect;
+					callback(true, id);
+				} else {
+					// WRONG!!! Re-direct back to login
+					callback(false, 0);
+				};
+			})
+		})
+	})
+};
+
 exports.getLessonList = function(callback) {
 	var r = redis.createClient();
 	var arr = [];
@@ -57,26 +78,48 @@ exports.getLesson = function(id, callback) {
 	});
 }
 
-exports.checkLogin = function(uname, pword, callback) {
-	var r = redis.createClient();
+exports.getTestResults = function(obj, callback) {
+	var arr = [],
+		r = redis.createClient();
 	r.stream.addListener('connect', function() {
-		sys.puts(uname)
-		r.get('user.by.uname:'+uname, function(err, id){
-			sys.puts(id);
-			r.get('user:'+id+':pword', function(err, dpword) {
-				sys.puts(pword+' '+dpword);
-				if (pword==dpword) {
-					//We're good, save to session and redirect;
-					callback(true, id);
+		r.get('user:'+obj.uid+':tests:'+obj.test+':cur.attempt', function(err, tot) {
+			for (var x=1;x<tot+1;x++) {
+				if (x+1!=tot) {
+					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
+					r.get(s+':total', function(err, total) {
+						r.get(s+':correct', function(err, correct) {
+							r.get(s+':results', function(err, results) {
+								arr.push({
+									total: total,
+									correct: correct,
+									results: JSON.parse(results)
+								});
+							})
+						})
+					})
 				} else {
-					// WRONG!!! Re-direct back to login
-					callback(false, 0);
-				};
-			})
+					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
+					r.get(s+':total', function(err, total) {
+						r.get(s+':correct', function(err, correct) {
+							r.get(s+':results', function(err, results) {
+								arr.push({
+									total: total,
+									correct: correct,
+									results: JSON.parse(results)
+								});
+								r.close();
+							})
+						})
+					})
+				}
+			}
 		})
+	}).addListener('end', function() {
+		callback(results);
 	})
 };
 
+// Setters
 exports.addLesson = function(obj, callback) {
 	var r = redis.createClient();
 	r.stream.addListener('connect', function() {
@@ -130,46 +173,5 @@ exports.addTestAttempt = function(obj, callback) {
 				})
 			})
 		})
-	})
-};
-
-exports.getTestResults = function(obj, callback) {
-	var arr = [],
-		r = redis.createClient();
-	r.stream.addListener('connect', function() {
-		r.get('user:'+obj.uid+':tests:'+obj.test+':cur.attempt', function(err, tot) {
-			for (var x=1;x<tot+1;x++) {
-				if (x+1!=tot) {
-					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
-					r.get(s+':total', function(err, total) {
-						r.get(s+':correct', function(err, correct) {
-							r.get(s+':results', function(err, results) {
-								arr.push({
-									total: total,
-									correct: correct,
-									results: JSON.parse(results)
-								});
-							})
-						})
-					})
-				} else {
-					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
-					r.get(s+':total', function(err, total) {
-						r.get(s+':correct', function(err, correct) {
-							r.get(s+':results', function(err, results) {
-								arr.push({
-									total: total,
-									correct: correct,
-									results: JSON.parse(results)
-								});
-								r.close();
-							})
-						})
-					})
-				}
-			}
-		})
-	}).addListener('end', function() {
-		callback(results);
 	})
 };
