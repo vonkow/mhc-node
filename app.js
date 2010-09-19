@@ -23,6 +23,11 @@ var getPostParams = function(req, callback) {
 		callback(obj);
 	});
 };
+j
+var render = function(res, t, o) {
+	res.writeHead(200, {'content-type':'text/html'});
+	res.end(template.create(qCat(t), o));
+};
 
 // Admin
 var createLesson = function(req, res) {
@@ -34,15 +39,21 @@ var createLesson = function(req, res) {
 };
 
 // Views
+var serveLessonList = function(req, res) {
+	db.getLessonList(function(arr) {
+		res.writeHead(200, {'Content-Type': 'text/html'});
+		res.end(JSON.stringify(arr));
+	})
+};
+
 var showLesson = function(req,res,l_id) {
 	db.getLessonList(function(l_list) {
 		db.getLesson(l_id, function(lesson) {
-			res.writeHead(200, {'content-type':'text/html'});
-			res.end(template.create(qCat('./lesson.html'), {
+			render(res, 'templates/lesson.html', {
 				lesson:lesson,
 				l_id:l_id,
 				l_list:l_list
-			}))
+			})
 		})
 	})
 };
@@ -51,14 +62,13 @@ var attemptTest = function(req, res, l_id) {
 	if (req.session['login'] == true) {
 		db.getLessonList(function(l_list) {
 			db.getLesson(l_id, function(lesson) {
-				res.writeHead(200, {'content-type': 'text/html'});
-				res.end(template.create(qCat('templates/test.html'), {
+				render(res, 'templates/test.html', {
 					lesson: lesson,
 					l_id: l_id,
 					l_list: l_list,
 					u_id: req.session['uid'],
 					u_name: req.session['uname']
-				}))
+				});
 			})
 		});
 	} else {
@@ -66,16 +76,23 @@ var attemptTest = function(req, res, l_id) {
 	}
 };
 
-var processTest = function(req, res, results) {
+var processTest = function(req, res) {
 	if (req.session['login'] == true) {
+		getPostParams(req, function(obj) {
+		});
 	} else {
 	}
 };
 
-var showTestResults = function(req, res) {
-};
-
-var showAllResults = function(req, res) {
+var showTestResults = function(req, res, l_id) {
+	if (req.session['login'] == true) {
+		db.getTestResults({
+			uid: req.session['uid'],
+			test: l_id
+		}, function(results) {
+		});
+	} else {
+	}
 };
 
 var tryLogin = function(req, res) {
@@ -123,10 +140,4 @@ var serveLesson = function(req, res, id) {
 	})
 };
 
-var serveLessonList = function(req, res) {
-	db.getLessonList(function(arr) {
-		res.writeHead(200, {'Content-Type': 'text/html'});
-		res.end(JSON.stringify(arr));
-	})
-};
 */
