@@ -8,7 +8,6 @@ exports.getLessonList = function(callback) {
 		r.get('cur.lesson.id', function(err, id) {
 			id=parseInt(id);
 			var len=id+1;
-			sys.puts(len+' '+id);
 			for (var x=1;x<len;x++) {
 				if (x+1!=len) {
 					r.get('lesson:'+x+':name', function(err, name) {
@@ -58,6 +57,26 @@ exports.getLesson = function(id, callback) {
 	});
 }
 
+exports.checkLogin = function(uname, pword, callback) {
+	var r = redis.createClient();
+	r.stream.addListener('connect', function() {
+		sys.puts(uname)
+		r.get('user.by.uname:'+uname, function(err, id){
+			sys.puts(id);
+			r.get('user:'+id+':pword', function(err, dpword) {
+				sys.puts(pword+' '+dpword);
+				if (pword==dpword) {
+					//We're good, save to session and redirect;
+					callback(true, id);
+				} else {
+					// WRONG!!! Re-direct back to login
+					callback(false, 0);
+				};
+			})
+		})
+	})
+};
+
 exports.addLesson = function(obj, callback) {
 	var r = redis.createClient();
 	r.stream.addListener('connect', function() {
@@ -66,10 +85,18 @@ exports.addLesson = function(obj, callback) {
 			r.set('lesson:'+id+':intro', obj.intro, function() {});
 			for (var x=0;x<obj.q.length;x++) {
 				r.rpush('lesson:'+id+':q', obj.q[x], function(){});
-				r.rpush('lesson:'+id+':a', obj.a[x], function(){});
+				if (x+1!=obj.q.length) {
+					r.rpush('lesson:'+id+':a', obj.a[x], function(){});
+				} else {
+					r.rpush('lesson:'+id+':a', obj.a[x], function(){
+						r.close();
+					});
+				}
 			};
-			callback();
+			//callback();
 		})
+	}).addListener('end', function() {
+		callback();
 	})
 };
 
@@ -89,20 +116,19 @@ exports.addUser = function(obj, callback) {
 	});
 };
 
-exports.checkLogin = function(uname, pword, callback) {
+exports.addTestAttempt = function(obj, callback) {
 	var r = redis.createClient();
 	r.stream.addListener('connect', function() {
-		r.get('user.by.uname'+uname, function(err, id){
-			r.get('user:'+id+':pword', function(err, dpword) {
-				if (pword==dpword) {
-					//We're good, save to session and redirect;
-				} else {
-					// WRONG!!! Re-direct back to login
-				};
+		r.incr('user:'+obj.uid+':tests:'+obj.test+':cur.attempt', function(err, att) {
+			var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+att;
+			r.rpush(s+':total', obj.total, function() {
+				r.rpush(s+':correct', obj.correct, function() {
+					r.rpush(s+':results', JSON.stringify(obj.results, function() {
+						r.close();
+						callback();
+					})
+				})
 			})
 		})
 	})
-};
-
-exports.addTestAttempt = function(obj, callback) {
 };

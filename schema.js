@@ -1,0 +1,26 @@
+cur.lesson.id
+lesson:x
+	:name
+	:intro
+	:q
+		[]
+	:a
+		[]
+cur.user.id
+user.by.uname:x
+user:x
+	:uname
+	:pword
+	(:user info)
+	:tests:x
+		:cur.attempt
+		:attempts
+			[
+				:total
+				:correct
+				:results
+					[
+						:q
+						:correct
+					]
+			]
