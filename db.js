@@ -169,7 +169,7 @@ exports.addTestAttempt = function(obj, callback) {
 					r.rpush(s+':results', JSON.stringify(obj.results, function() {
 						r.close();
 						callback();
-					})
+					}))
 				})
 			})
 		})

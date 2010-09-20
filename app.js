@@ -23,7 +23,7 @@ var getPostParams = function(req, callback) {
 		callback(obj);
 	});
 };
-j
+
 var render = function(res, t, o) {
 	res.writeHead(200, {'content-type':'text/html'});
 	res.end(template.create(qCat(t), o));
