@@ -1,9 +1,128 @@
 <!DoCtYpE hTmL>
 <html>
 	<head>
-		<title></title>
-		<link rel="stylesheet" type="text/css" href="styles/layout.css">
-		<script type="text/javascript" src="scripts/main.js"></script>
+		<title>
+		</title>
+		<style>
+			body {
+				padding: 0;
+				margin: 0;
+				background-color: #ccaa77;
+			}
+
+			#main {
+				width: 800px;
+				height: 600px;
+				margin-left: auto;
+				margin-right: auto;
+				/* margin-top: 15px; */
+				background-color: #eeeeee;
+			}
+			
+			#main-header {
+				text-align: center;
+				background-color: #ffffff;
+				height: 50px;
+			}
+			
+			#sidebar {
+				width: 225px;
+				height: 550px;
+				float: left;
+				background-color: #ddccaa;
+			}
+			
+			#content {
+				float: left;
+				height: 550px;
+				width: 575px;
+			}
+			
+			#content-body {
+				height: 425px;
+				width: 575px;
+				overflow: auto;
+				/* overflow: scroll; */
+				background-color: #ffeedd;
+			}
+
+			#content-menu {
+				height: 125px;
+				width: 575px;
+				background-color: #ccbb88;
+				text-align: center;
+			}
+
+			#main-footer {
+				clear: both;
+			}
+		</style>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<% if(ctx=='attempt') { %>
+			<script>
+				var lesson = {
+					intro: '<%=lesson.intro%>',
+					q: [
+						<% for (var x=0; x<lesson.q.length; x++) { %>
+							[<%=x%>,'<%=lesson.q[x]%>','<%=lesson.a[x]%>']
+							<% if (x+1!=lesson.q.length) { %>
+								,
+							<% } %>
+						<% } %>
+					]
+				};
+				var t,
+					cur = 0,
+					results = [],
+					total = 0,
+					correct = 0;
+				function randOrd() {
+					return (Math.round(Math.random())-0.5); 
+				} 
+				var randomize = function() {
+					lesson.q = lesson.q.sort(randOrd);
+				}
+				var showQuestion = function() {
+					$('#content-body').html(lesson.q[cur][1]);
+					$('#content-menu').html('<button id="show-answer" onclick="showAnswer()">Show Answer</button>');
+				};
+				var showAnswer = function() {
+					$('#content-body').html(lesson.q[cur][2]);
+					$('#content-menu').html('<button id="was-correct" onclick="processAnswer(true)">Yes</button><button id="was-incorrect" onclick="processAnswer(false)">No</button>');
+				};
+				var processAnswer = function(result) {
+					total++;
+					correct+=result;
+					results.push([lesson.q[cur][0],result]);
+					(++cur<lesson.q.length) || (cur=0,randomize());
+					showQuestion();
+				};
+
+				var startTest=function() {
+					t = setTimeout(endTest, 10000);
+					showQuestion();
+				}
+				var endTest = function() {
+					$('#content-body').html('You answered '+correct+' of '+total+' questions correctly.');
+					$('#content-menu').html('Submitting Results...');
+					$.post('../../process-test', 
+						{ u_id:<%=u_id%>, l_id:<%=l_id%>, correct:correct, total:total, results:results },
+						function(data) {
+							$('#content-menu').html('<button>View Results</button>');
+						});
+				};
+				$(document).ready(function() {
+					$('#content-body').html(lesson.intro);
+					$('#content-menu').html('<button id="start-test" onclick="startTest()">Start the Test</button>');
+				});
+			</script>
+		<% } else if (ctx=='view') { %>
+			<script>
+				$(document).ready(function() {
+					$('#content-body').html(lesson.intro);
+				});
+			</script>
+		<% } %>
 	</head>
 	<body>
 		<div id="main" notes="Centered main area">
@@ -23,7 +142,7 @@
 			<div id="main-footer">
 			</div>
 		</div>
-		<script> inject({
+		<!--<script> inject({
 			sb:
 			'<ul>\
 				<li>Overview</li>\
@@ -50,6 +169,6 @@
 				'content body',
 			cm:
 				'content menu'
-		}); </script>
+		}); </script>-->
 	</body>
 </html>
