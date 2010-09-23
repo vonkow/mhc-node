@@ -30,6 +30,12 @@ var render = function(res, t, o) {
 	res.end(template.create(tem, o));
 };
 
+var serveHighcharts = function(req, res) {
+	sys.puts('Serving Highcharts');
+	res.writeHead(200, {'Content-Type':'application/javascript'});
+	res.end(qCat('templates/js/highcharts.js'));
+};
+
 // Admin
 var createLesson = function(req, res) {
 	getPostParams(req, function(obj) {
@@ -97,13 +103,26 @@ var processTest = function(req, res) {
 
 var showTestResults = function(req, res, l_id) {
 	if (req.session['login'] == true) {
-		db.getTestResults({
-			uid: req.session['uid'],
-			test: l_id
-		}, function(results) {
-			res.writeHead(200, {'Content-Type': 'text/html'});
-			res.end(JSON.stringify(results));
-		});
+		db.getLessonList(function(l_list) {
+			db.getLesson(l_id, function(lesson) {
+				db.getTestResults({
+					uid: req.session['uid'],
+					test: l_id
+				}, function(results) {
+						render(res, 'templates/base.html', {
+							ctx:'results',
+							results: results,
+							lesson: lesson,
+							l_id: l_id,
+							l_list: l_list,
+							u_id: req.session['uid'],
+							u_name: req.session['uname']
+						});
+					//res.writeHead(200, {'Content-Type': 'text/html'});
+					//res.end(JSON.stringify(results));
+				})
+			})
+		})
 	} else {
 	}
 };
@@ -131,7 +150,8 @@ nerve.create([
 	[ nerve.post('/try-login/'), tryLogin ],
 	[ nerve.post('/process-test'), processTest ],
 	[ nerve.get(/^\/results\/([0-9]+)/), showTestResults ],
-	[ nerve.get(/^\/test\/([0-9]+)/), attemptTest ]
+	[ nerve.get(/^\/test\/([0-9]+)/), attemptTest ],
+	[ "/js/highcharts.js", serveHighcharts ]
 	//[ '/display-login/', displayLogin ]
 ], {session_duration:3600000}).listen(8000);
 

@@ -87,7 +87,7 @@ var getTest = function(r,obj,tot,cur,arr) {
 				arr.push({
 					total: ''+total,
 					correct: ''+correct,
-					results: ''+results
+					results: JSON.parse(results)
 				});
 				if (++cur<=tot) {
 					getTest(r,obj,tot,cur,arr);
@@ -100,7 +100,10 @@ var getTest = function(r,obj,tot,cur,arr) {
 }
 
 exports.getTestResults = function(obj, callback) {
-	sys.puts(obj.uid+' '+obj.test+' u/t');
+	sys.puts('GET TEST RESULTS');
+	sys.puts('User: '+obj.uid);
+	sys.puts('Test: '+obj.test);
+	sys.puts('');
 	var arr = [],
 		r = redis.createClient();
 	r.stream.addListener('connect', function() {

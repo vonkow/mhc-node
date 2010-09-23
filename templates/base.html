@@ -118,8 +118,95 @@
 			</script>
 		<% } else if (ctx=='view') { %>
 			<script>
+				var lesson = <%=JSON.stringify(lesson)%>;
 				$(document).ready(function() {
 					$('#content-body').html(lesson.intro);
+				});
+			</script>
+		<% } else if (ctx=='results') { %>
+			<script src="/js/highcharts.js"></script>
+			<script>
+				var results = <%=JSON.stringify(results)%>;
+				var chart;
+				$(document).ready(function() {
+					chart=new Highcharts.Chart({
+						chart: {
+							renderTo: 'chart',
+							defaultSeriesType: 'column'
+						},
+						title: {
+							text: 'Results'
+						},
+						subtitle: {
+							text: 'Test <%=l_id%>'
+						},
+						xAxis: {
+							/*min: 0,
+							allowDecimals: false,*/
+							categories: [
+								<% for (var x=1;x<=results.length; x++) { %>
+									'<%=x%>'
+									<% if (x<results.length) { %>
+										,
+									<% } %>
+								<% } %>
+							],
+							title: {
+								text: 'Attempts'
+							}
+						},
+						yAxis: {
+							min: 0,
+							title: {
+								text: 'Questions'
+							}
+						},
+						legend: {
+							layout: 'vertical',
+							backgroundColor: '#FFFFFF',
+							align: 'left',
+							verticalAlign: 'top',
+							x: 100,
+							y: 50
+						},
+						tooltip: {
+							formatter: function() {
+								return '<b>Attempt '+this.x+'</b><br>'+
+										this.series.name+': '+this.y+'<br>'
+							}
+						},
+						plotOptions: {
+							column: {
+								pointPadding: 0.2,
+								borderWidth: 0
+								//stacking: 'normal'
+							}
+						},
+						series: [
+							{
+								name: 'Correct',
+								data: [
+									<% for (var x=0;x<results.length; x++) { %>
+										<%=results[x].correct%>
+										<% if (x+1<results.length) { %>
+											,
+										<% } %>
+									<% } %>
+								]
+							},
+							{
+								name: 'Total',
+								data: [
+									<% for (var x=0;x<results.length; x++) { %>
+										<%=results[x].total%>
+										<% if (x+1<results.length) { %>
+											,
+										<% } %>
+									<% } %>
+								]
+							}
+						]
+					});
 				});
 			</script>
 		<% } %>
@@ -131,9 +218,60 @@
 			</div>
 			<div id="main-body">
 				<div id="sidebar" notes="float that contextual bitch left!">
+					<ul>
+						<li>Overview</li>
+						<li>
+							Tests<br>
+							<ul>
+								<li>
+									1 Names <br>
+									<a href="/test/1/">Test</a>&nbsp;
+									<a href="/results/1/">Results</a>&nbsp;
+									<a href="/lesson/1/">Study</a>&nbsp;
+								</li>
+								<li>
+									2 Definitions <br>
+									<a href="/test/1/">Test</a>&nbsp;
+									<a href="/results/1/">Results</a>&nbsp;
+									<a href="/lesson/1/">Study</a>&nbsp;
+								</li>
+								<li>
+									3 Axioms <br>
+									<a href="/test/1/">Test</a>&nbsp;
+									<a href="/results/1/">Results</a>&nbsp;
+									<a href="/lesson/1/">Study</a>&nbsp;
+								</li>
+								<li>
+									4 Sentences <br>
+									<a href="/test/1/">Test</a>&nbsp;
+									<a href="/results/1/">Results</a>&nbsp;
+									<a href="/lesson/1/">Study</a>&nbsp;
+								</li>
+								<li>
+									5 Vignettes <br>
+									<a href="/test/1/">Test</a>&nbsp;
+									<a href="/results/1/">Results</a>&nbsp;
+									<a href="/lesson/1/">Study</a>&nbsp;
+								</li>
+							</ul>
+						</li>
+						<li>
+							Results<br>
+							<ul>
+								<li>Overall</li>
+								<li>By Test</li>
+								<li>Profile</li>
+							</ul>
+						</li>
+					</ul>
+
 				</div>
 				<div id="content" notes="">
 					<div id="content-body" notes="content area">
+						<% if (ctx=='results') { %>
+							<div id="chart" style="width:500; height:400px; margin: 0 auto;"></div>
+
+						<% } %>
 					</div>
 					<div id="content-menu" notes="fixed height bottom context menu">
 					</div>
