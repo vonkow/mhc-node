@@ -108,7 +108,7 @@
 					$.post('../../process-test', 
 						{ u_id:<%=u_id%>, l_id:<%=l_id%>, correct:correct, total:total, results:results },
 						function(data) {
-							$('#content-menu').html('<button>View Results</button>');
+							$('#content-menu').html('<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/results/<%=l_id%>/';"+'">View Results</button>');
 						});
 				};
 				$(document).ready(function() {
@@ -118,9 +118,20 @@
 			</script>
 		<% } else if (ctx=='view') { %>
 			<script>
-				var lesson = <%=JSON.stringify(lesson)%>;
+				var lesson = {
+					intro: '<%=lesson.intro%>',
+					q: [
+						<% for (var x=0; x<lesson.q.length; x++) { %>
+							[<%=x%>,'<%=lesson.q[x]%>','<%=lesson.a[x]%>']
+							<% if (x+1!=lesson.q.length) { %>
+								,
+							<% } %>
+						<% } %>
+					]
+				};
 				$(document).ready(function() {
 					$('#content-body').html(lesson.intro);
+					$('#content-menu').html('<button id="show-intro">Intro</button>');
 				});
 			</script>
 		<% } else if (ctx=='results') { %>
@@ -141,8 +152,6 @@
 							text: 'Test <%=l_id%>'
 						},
 						xAxis: {
-							/*min: 0,
-							allowDecimals: false,*/
 							categories: [
 								<% for (var x=1;x<=results.length; x++) { %>
 									'<%=x%>'
@@ -179,8 +188,10 @@
 							column: {
 								pointPadding: 0.2,
 								borderWidth: 0
-								//stacking: 'normal'
 							}
+						},
+						exporting: {
+							filename: '<%=u_name%>-test-results-lesson-<%=l_id%>'
 						},
 						series: [
 							{
@@ -214,66 +225,62 @@
 	<body>
 		<div id="main" notes="Centered main area">
 			<div id="main-header" notes="centered Dare logo">
-				<img src="images/dare-title.gif">
+				<img src="images/logo.gif">
 			</div>
 			<div id="main-body">
 				<div id="sidebar" notes="float that contextual bitch left!">
 					<ul>
-						<li>Overview</li>
+						<li>Introduction</li>
 						<li>
-							Tests<br>
-							<ul>
-								<li>
-									1 Names <br>
-									<a href="/test/1/">Test</a>&nbsp;
-									<a href="/results/1/">Results</a>&nbsp;
-									<a href="/lesson/1/">Study</a>&nbsp;
-								</li>
-								<li>
-									2 Definitions <br>
-									<a href="/test/1/">Test</a>&nbsp;
-									<a href="/results/1/">Results</a>&nbsp;
-									<a href="/lesson/1/">Study</a>&nbsp;
-								</li>
-								<li>
-									3 Axioms <br>
-									<a href="/test/1/">Test</a>&nbsp;
-									<a href="/results/1/">Results</a>&nbsp;
-									<a href="/lesson/1/">Study</a>&nbsp;
-								</li>
-								<li>
-									4 Sentences <br>
-									<a href="/test/1/">Test</a>&nbsp;
-									<a href="/results/1/">Results</a>&nbsp;
-									<a href="/lesson/1/">Study</a>&nbsp;
-								</li>
-								<li>
-									5 Vignettes <br>
-									<a href="/test/1/">Test</a>&nbsp;
-									<a href="/results/1/">Results</a>&nbsp;
-									<a href="/lesson/1/">Study</a>&nbsp;
-								</li>
-							</ul>
+							1 Names <br>
+							<a href="/test/1/">Test</a>&nbsp;
+							<a href="/results/1/">Results</a>&nbsp;
+							<a href="/lesson/1/">Study</a>&nbsp;
 						</li>
 						<li>
-							Results<br>
-							<ul>
-								<li>Overall</li>
-								<li>By Test</li>
-								<li>Profile</li>
-							</ul>
+							2 Definitions <br>
+							<a href="/test/1/">Test</a>&nbsp;
+							<a href="/results/1/">Results</a>&nbsp;
+							<a href="/lesson/1/">Study</a>&nbsp;
+						</li>
+						<li>
+							3 Axioms <br>
+							<a href="/test/1/">Test</a>&nbsp;
+							<a href="/results/1/">Results</a>&nbsp;
+							<a href="/lesson/1/">Study</a>&nbsp;
+						</li>
+						<li>
+							4 Sentences <br>
+							<a href="/test/1/">Test</a>&nbsp;
+							<a href="/results/1/">Results</a>&nbsp;
+							<a href="/lesson/1/">Study</a>&nbsp;
+						</li>
+						<li>
+							5 Vignettes <br>
+							<a href="/test/1/">Test</a>&nbsp;
+							<a href="/results/1/">Results</a>&nbsp;
+							<a href="/lesson/1/">Study</a>&nbsp;
 						</li>
 					</ul>
-
 				</div>
 				<div id="content" notes="">
 					<div id="content-body" notes="content area">
 						<% if (ctx=='home') { %>
-							<form action="/try-login/" method="post">
-								<input name="uname" type="text">
-								<input name="pword" type="password">
-								<input type="submit" value="Login">
-							</form>
+							<% if (u_id==0) { %>
+								<form action="/try-login/" method="post">
+									<input name="uname" type="text">
+									<input name="pword" type="password">
+									<input type="submit" value="Login">
+								</form>
+								<br>
+								<form action="/add-user/" method="post">
+									<input name="uname" type="text">
+									<input name="pword" type="password">
+									<input type="submit" value="Login">
+								</form>
+							<% } else { %>
+								Greetings <%=u_name%>!
+							<% } %>
 						<% } else if (ctx=='results') { %>
 							<div id="chart" style="width:500; height:400px; margin: 0 auto;"></div>
 

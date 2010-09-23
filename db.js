@@ -7,17 +7,21 @@ exports.checkLogin = function(uname, pword, callback) {
 	r.stream.addListener('connect', function() {
 		sys.puts(uname)
 		r.get('user.by.uname:'+uname, function(err, id){
-			sys.puts(id);
-			r.get('user:'+id+':pword', function(err, dpword) {
-				sys.puts(pword+' '+dpword);
-				if (pword==dpword) {
-					//We're good, save to session and redirect;
-					callback(true, id);
-				} else {
-					// WRONG!!! Re-direct back to login
-					callback(false, 0);
-				};
-			})
+			if (!id) {
+				callback(false, 0);
+			} else {
+				sys.puts(id);
+				r.get('user:'+id+':pword', function(err, dpword) {
+					sys.puts(pword+' '+dpword);
+					if (pword==dpword) {
+						//We're good, save to session and redirect;
+						callback(true, id);
+					} else {
+						// WRONG!!! Re-direct back to login
+						callback(false, 0);
+					};
+				})
+			};
 		})
 	})
 };
@@ -60,17 +64,17 @@ exports.getLesson = function(id, callback) {
 	r.stream.addListener('connect', function(){
 		r.get('lesson:'+id+':name', function(err, name) {
 			obj.name = ''+name;
-		});
-		r.get('lesson:'+id+':intro', function(err, intro) {
-			obj.intro = ''+intro;
-		});
-		r.lrange('lesson:'+id+':q', 0, -1, function(err, q) {
-			obj.q=q;
-		});
-		r.lrange('lesson:'+id+':a', 0, -1, function(err, a) {
-			obj.a=a;
-			sys.puts("got lesson: "+id);
-			r.close();
+			r.get('lesson:'+id+':intro', function(err, intro) {
+				obj.intro = ''+intro;
+				r.lrange('lesson:'+id+':q', 0, -1, function(err, q) {
+					obj.q=q;
+					r.lrange('lesson:'+id+':a', 0, -1, function(err, a) {
+						obj.a=a;
+						sys.puts("got lesson: "+id);
+						r.close();
+					});
+				});
+			});
 		});
 	})
 	.addListener('end', function() {
@@ -110,38 +114,6 @@ exports.getTestResults = function(obj, callback) {
 		r.get('user:'+obj.uid+':tests:'+obj.test+':cur.attempt', function(err, tot) {
 			sys.puts(tot);
 			getTest(r,obj,tot,1,arr);
-				/*
-			for (var x=1;x<tot+1;x++) {
-				if (x+1!=tot) {
-					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
-					r.get(s+':total', function(err, total) {
-						r.get(s+':correct', function(err, correct) {
-							r.get(s+':results', function(err, results) {
-								arr.push({
-									total: total,
-									correct: correct,
-									results: JSON.stringify(results)
-								});
-							})
-						})
-					})
-				} else {
-					var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+x;
-					r.get(s+':total', function(err, total) {
-						r.get(s+':correct', function(err, correct) {
-							r.get(s+':results', function(err, results) {
-								arr.push({
-									total: total,
-									correct: correct,
-									results: JSON.stringify(results)
-								});
-								r.close();
-							})
-						})
-					})
-				}
-			}
-			*/
 		})
 	}).addListener('end', function() {
 		callback(arr);
@@ -165,7 +137,6 @@ exports.addLesson = function(obj, callback) {
 					});
 				}
 			};
-			//callback();
 		})
 	}).addListener('end', function() {
 		callback();
@@ -180,7 +151,7 @@ exports.addUser = function(obj, callback) {
 			r.set('user:'+id+':uname', obj.uname, function() {
 				r.set('user.by.uname:'+obj.uname, id, function(){
 					r.set('user:'+id+':pword', obj.pword, function(){
-						callback();
+						callback(obj);
 					});
 				});
 			});

@@ -1,8 +1,6 @@
 // Deps
 var sys = require('sys'),
-	//http=require('http'),
 	fs=require('fs'),
-	//url=require('url'),
 	qs = require('querystring'),
 	template = require('./lib/template'),
 	nerve = require('./lib/nerve'),
@@ -36,6 +34,12 @@ var serveHighcharts = function(req, res) {
 	res.end(qCat('templates/js/highcharts.js'));
 };
 
+var serveLogo = function(req, res) {
+	sys.puts('Serving Logo');
+	res.writeHead(200, {'Content-Type':'image/gif'});
+	res.end(fs.readFileSync('templates/images/dare-title.gif'));
+};
+
 // Admin
 var createLesson = function(req, res) {
 	getPostParams(req, function(obj) {
@@ -59,6 +63,7 @@ var showHome = function(req, res) {
 		render(res, 'templates/base.html', {
 			ctx:'home',
 			u_id:(req.session['uid']||0),
+			u_name: (req.session['uname']||''),
 			l_list: l_list
 		})
 	});
@@ -72,6 +77,7 @@ var showLesson = function(req,res,l_id) {
 				ctx:'view',
 				lesson:lesson,
 				u_id:(req.session['uid']||0),
+				u_name: (req.session['uname']||''),
 				l_id:l_id,
 				l_list:l_list
 			})
@@ -94,7 +100,7 @@ var attemptTest = function(req, res, l_id) {
 			})
 		});
 	} else {
-		//Redirect to home or maybe login or show lesson
+		redirectHome(res);
 	}
 };
 
@@ -106,36 +112,31 @@ var showTestResults = function(req, res, l_id) {
 					uid: req.session['uid'],
 					test: l_id
 				}, function(results) {
-						render(res, 'templates/base.html', {
-							ctx:'results',
-							results: results,
-							lesson: lesson,
-							l_id: l_id,
-							l_list: l_list,
-							u_id: req.session['uid'],
-							u_name: req.session['uname']
-						});
-					//res.writeHead(200, {'Content-Type': 'text/html'});
-					//res.end(JSON.stringify(results));
+					render(res, 'templates/base.html', {
+						ctx:'results',
+						results: results,
+						lesson: lesson,
+						l_id: l_id,
+						l_list: l_list,
+						u_id: req.session['uid'],
+						u_name: req.session['uname']
+					});
 				})
 			})
 		})
 	} else {
+		redirectHome(res);
 	}
 };
 
 var processTest = function(req, res) {
 	sys.puts('Processing Test')
-	//if (req.session['login'] == true) {
-		getPostParams(req, function(obj) {
-			db.addTestAttempt(obj, function() {
-				res.writeHead(200, {'Content-Type': 'text/html'});
-				res.end('All Good');
-			})
-			//{u_id,l_id,results}
-		});
-	//} else {
-	//}
+	getPostParams(req, function(obj) {
+		db.addTestAttempt(obj, function() {
+			res.writeHead(200, {'Content-Type': 'text/html'});
+			res.end('All Good');
+		})
+	});
 };
 
 var tryLogin = function(req, res) {
@@ -147,12 +148,29 @@ var tryLogin = function(req, res) {
 				req.session['uname'] = obj.uname;
 				sys.puts('login ok');
 			}
-			// TEMP
-			//serveLessonList(req, res);
 			redirectHome(res);
 		})
 	})
 }
+
+var registerUser = function(req, res) {
+	getPostParams(req, function(obj) {
+		db.addUser(obj, function(obj) {
+			sys.puts('user added');
+			sys.puts(req);
+			sys.puts(res);
+			db.checkLogin(obj.uname, obj.pword, function(ok, id) {
+				if (ok) {
+					req.session['login'] = true;
+					req.session['uid'] = id;
+					req.session['uname'] = obj.uname;
+					sys.puts('login ok');
+				}
+				redirectHome(res);
+			})
+		})
+	})
+};
 
 var redirectHome = function(res) {
 	sys.puts('serving redirect');
@@ -163,38 +181,16 @@ var redirectHome = function(res) {
 
 // Url
 nerve.create([
-	//[ "/", serveLessonList ],
 	//[ nerve.post("/add-user"), addUser ],
 	[ '/', showHome ],
 	[ nerve.get(/^\/lesson\/([0-9]+)/), showLesson ],
 	[ nerve.post("/add-lesson"), createLesson ],
 	[ nerve.post('/try-login/'), tryLogin ],
+	[ nerve.post('/add-user/'), registerUser ],
 	[ nerve.post('/process-test'), processTest ],
 	[ nerve.get(/^\/results\/([0-9]+)/), showTestResults ],
 	[ nerve.get(/^\/test\/([0-9]+)/), attemptTest ],
+	[ "/images/logo.gif", serveLogo ],
 	[ "/js/highcharts.js", serveHighcharts ]
-	//[ '/display-login/', displayLogin ]
 ], {session_duration:3600000}).listen(8000);
 
-/*
-var displayLogin = function(req, res) {
-	sys.puts(req.session['login']);
-	if (req.session['login']==true) {
-		res.writeHead(200, {'content-type':'text/html'});
-		res.end('logged in')
-	} else {
-		res.writeHead(200, {'content-type':'text/html'});
-		res.end('not logged in')
-	}
-};
-*/
-
-/*
-var serveLesson = function(req, res, id) {
-	db.getLesson(id, function(obj) {
-		res.writeHead(200, {'Content-Type': 'text/html'});
-		res.end(JSON.stringify(obj));
-	})
-};
-
-*/
