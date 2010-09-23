@@ -9,7 +9,7 @@ var sys = require('sys'),
 	db = require('./db');
 
 // Util
-var qCat=function(filePath){
+var qCat=function(filePath) {
 	return ''+fs.readFileSync(filePath);
 };
 
@@ -53,6 +53,17 @@ var serveLessonList = function(req, res) {
 	})
 };
 
+var showHome = function(req, res) {
+	db.getLessonList(function(l_list) {
+		sys.puts('Displaying Home');
+		render(res, 'templates/base.html', {
+			ctx:'home',
+			u_id:(req.session['uid']||0),
+			l_list: l_list
+		})
+	});
+};
+
 var showLesson = function(req,res,l_id) {
 	db.getLessonList(function(l_list) {
 		db.getLesson(l_id, function(lesson) {
@@ -60,7 +71,7 @@ var showLesson = function(req,res,l_id) {
 			render(res, 'templates/base.html', {
 				ctx:'view',
 				lesson:lesson,
-				u_id:1,
+				u_id:(req.session['uid']||0),
 				l_id:l_id,
 				l_list:l_list
 			})
@@ -85,20 +96,6 @@ var attemptTest = function(req, res, l_id) {
 	} else {
 		//Redirect to home or maybe login or show lesson
 	}
-};
-
-var processTest = function(req, res) {
-	sys.puts('Processing Test')
-	//if (req.session['login'] == true) {
-		getPostParams(req, function(obj) {
-			db.addTestAttempt(obj, function() {
-				res.writeHead(200, {'Content-Type': 'text/html'});
-				res.end('All Good');
-			})
-			//{u_id,l_id,results}
-		});
-	//} else {
-	//}
 };
 
 var showTestResults = function(req, res, l_id) {
@@ -127,6 +124,20 @@ var showTestResults = function(req, res, l_id) {
 	}
 };
 
+var processTest = function(req, res) {
+	sys.puts('Processing Test')
+	//if (req.session['login'] == true) {
+		getPostParams(req, function(obj) {
+			db.addTestAttempt(obj, function() {
+				res.writeHead(200, {'Content-Type': 'text/html'});
+				res.end('All Good');
+			})
+			//{u_id,l_id,results}
+		});
+	//} else {
+	//}
+};
+
 var tryLogin = function(req, res) {
 	getPostParams(req, function(obj) {
 		db.checkLogin(obj.uname, obj.pword, function(ok, id) {
@@ -134,17 +145,27 @@ var tryLogin = function(req, res) {
 				req.session['login'] = true;
 				req.session['uid'] = id;
 				req.session['uname'] = obj.uname;
+				sys.puts('login ok');
 			}
 			// TEMP
-			serveLessonList(req, res);
+			//serveLessonList(req, res);
+			redirectHome(res);
 		})
 	})
 }
 
+var redirectHome = function(res) {
+	sys.puts('serving redirect');
+	res.writeHead(200, {'Content-Type': 'text/html'});
+	res.write("<!doctype html><html><body><script>window.location.replace('http://127.0.0.1:8000/');</script></body></html>\n", 'utf8');
+	res.end();
+}
+
 // Url
 nerve.create([
-	[ "/", serveLessonList ],
+	//[ "/", serveLessonList ],
 	//[ nerve.post("/add-user"), addUser ],
+	[ '/', showHome ],
 	[ nerve.get(/^\/lesson\/([0-9]+)/), showLesson ],
 	[ nerve.post("/add-lesson"), createLesson ],
 	[ nerve.post('/try-login/'), tryLogin ],

@@ -268,7 +268,13 @@
 				</div>
 				<div id="content" notes="">
 					<div id="content-body" notes="content area">
-						<% if (ctx=='results') { %>
+						<% if (ctx=='home') { %>
+							<form action="/try-login/" method="post">
+								<input name="uname" type="text">
+								<input name="pword" type="password">
+								<input type="submit" value="Login">
+							</form>
+						<% } else if (ctx=='results') { %>
 							<div id="chart" style="width:500; height:400px; margin: 0 auto;"></div>
 
 						<% } %>
@@ -280,33 +286,5 @@
 			<div id="main-footer">
 			</div>
 		</div>
-		<!--<script> inject({
-			sb:
-			'<ul>\
-				<li>Overview</li>\
-				<li>\
-					Tests<br>\
-					<ul>\
-						<li>1 Names</li>\
-						<li>2 Definitions</li>\
-						<li>3 Axioms</li>\
-						<li>4 Sentences</li>\
-						<li>5 Vignettes</li>\
-					</ul>\
-				</li>\
-				<li>\
-					Results<br>\
-					<ul>\
-						<li>Overall</li>\
-						<li>By Test</li>\
-						<li>Profile</li>\
-					</ul>\
-				</li>\
-			</ul>',
-			cb:
-				'content body',
-			cm:
-				'content menu'
-		}); </script>-->
 	</body>
 </html>
