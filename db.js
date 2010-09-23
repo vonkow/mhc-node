@@ -91,7 +91,8 @@ var getTest = function(r,obj,tot,cur,arr) {
 				arr.push({
 					total: ''+total,
 					correct: ''+correct,
-					results: JSON.parse(results)
+					results: results
+					//results: JSON.parse(results)
 				});
 				if (++cur<=tot) {
 					getTest(r,obj,tot,cur,arr);
