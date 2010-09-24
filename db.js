@@ -8,17 +8,20 @@ exports.checkLogin = function(uname, pword, callback) {
 		sys.puts(uname)
 		r.get('user.by.uname:'+uname, function(err, id){
 			if (!id) {
-				callback(false, 0);
+				callback(false, 0, 0);
 			} else {
 				sys.puts(id);
 				r.get('user:'+id+':pword', function(err, dpword) {
 					sys.puts(pword+' '+dpword);
 					if (pword==dpword) {
-						//We're good, save to session and redirect;
-						callback(true, id);
+						r.get('user:'+id+':cur.test', function(err, cur_test) {
+							//We're good, save to session and redirect;
+							sys.puts('cur test'+cur_test);
+							callback(true, id, cur_test);
+						});
 					} else {
 						// WRONG!!! Re-direct back to login
-						callback(false, 0);
+						callback(false, 0, 0);
 					};
 				})
 			};
@@ -84,21 +87,24 @@ exports.getLesson = function(id, callback) {
 
 var getTest = function(r,obj,tot,cur,arr) {
 	var s = 'user:'+obj.uid+':tests:'+obj.test+':attempts:'+cur;
-	r.get(s+':total', function(err, total) {
-		r.get(s+':correct', function(err, correct) {
-			r.get(s+':results', function(err, results) {
-				sys.puts(results);
-				arr.push({
-					total: ''+total,
-					correct: ''+correct,
-					results: results
-					//results: JSON.parse(results)
-				});
-				if (++cur<=tot) {
-					getTest(r,obj,tot,cur,arr);
-				} else {
-					r.close();
-				}
+	r.get(s+':date', function(err, test_date) {
+		r.get(s+':total', function(err, total) {
+			r.get(s+':correct', function(err, correct) {
+				r.get(s+':results', function(err, results) {
+					sys.puts(results);
+					arr.push({
+						test_date: ''+test_date,
+						total: ''+total,
+						correct: ''+correct,
+						results: results
+						//results: JSON.parse(results)
+					});
+					if (++cur<=tot) {
+						getTest(r,obj,tot,cur,arr);
+					} else {
+						r.close();
+					}
+				})
 			})
 		})
 	})
@@ -152,7 +158,9 @@ exports.addUser = function(obj, callback) {
 			r.set('user:'+id+':uname', obj.uname, function() {
 				r.set('user.by.uname:'+obj.uname, id, function(){
 					r.set('user:'+id+':pword', obj.pword, function(){
-						callback(obj);
+						r.set('user:'+id+':cur.test', 1, function() {
+							callback(obj);
+						});
 					});
 				});
 			});
@@ -166,11 +174,15 @@ exports.addTestAttempt = function(obj, callback) {
 	r.stream.addListener('connect', function() {
 		r.incr('user:'+obj.u_id+':tests:'+obj.l_id+':cur.attempt', function(err, att) {
 			var s = 'user:'+obj.u_id+':tests:'+obj.l_id+':attempts:'+att;
-			r.set(s+':total', obj.total, function() {
-				r.set(s+':correct', obj.correct, function() {
-					r.set(s+':results', ''+JSON.stringify(obj.results), function() {
-						r.close();
-						callback();
+			r.set(s+':date', new Date(), function() {
+				r.set(s+':total', obj.total, function() {
+					r.set(s+':correct', obj.correct, function() {
+						r.set(s+':results', ''+JSON.stringify(obj.results), function() {
+							r.set('user:'+obj.u_id+':cur.test', obj.l_id, function() {
+								r.close();
+								callback();
+							})
+						})
 					})
 				})
 			})

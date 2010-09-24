@@ -1,0 +1,170 @@
+#Loads all lessons into redis
+#
+# Lesson 1
+../redis-2.0.0-rc4/redis-cli set lesson:1:name Names
+FILE=`cat data/1.html`
+../redis-2.0.0-rc4/redis-cli set lesson:1:intro "$FILE"
+FILE=`cat data/1-1q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:q "$FILE"
+FILE=`cat data/1-1a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:a "$FILE"
+FILE=`cat data/1-2q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:q "$FILE"
+FILE=`cat data/1-2a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:a "$FILE"
+FILE=`cat data/1-3q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:q "$FILE"
+FILE=`cat data/1-3a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:a "$FILE"
+FILE=`cat data/1-4q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:q "$FILE"
+FILE=`cat data/1-4a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:a "$FILE"
+FILE=`cat data/1-5q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:q "$FILE"
+FILE=`cat data/1-5a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:a "$FILE"
+FILE=`cat data/1-6q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:q "$FILE"
+FILE=`cat data/1-6a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:1:a "$FILE"
+#
+# Lesson 2
+../redis-2.0.0-rc4/redis-cli set lesson:2:name Definitions
+FILE=`cat data/2.html`
+../redis-2.0.0-rc4/redis-cli set lesson:2:intro "$FILE"
+FILE=`cat data/2-1q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-1a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-2q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-2a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-3q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-3a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-4q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-4a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-5q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-5a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-6q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-6a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-7q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-7a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-8q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-8a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-9q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-9a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+FILE=`cat data/2-10q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:q "$FILE"
+FILE=`cat data/2-10a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:2:a "$FILE"
+#
+# Lesson 3
+../redis-2.0.0-rc4/redis-cli set lesson:3:name Axioms
+FILE=`cat data/3.html`
+../redis-2.0.0-rc4/redis-cli set lesson:3:intro "$FILE"
+FILE=`cat data/3-1q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-1a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-2q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-2a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-3q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-3a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-4q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-4a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-5q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-5a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-6q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-6a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-7q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-7a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-8q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-8a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-9q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-9a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+FILE=`cat data/3-10q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:q "$FILE"
+FILE=`cat data/3-10a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:3:a "$FILE"
+#
+# Lesson 4
+../redis-2.0.0-rc4/redis-cli set lesson:4:name Sentences
+FILE=`cat data/4.html`
+../redis-2.0.0-rc4/redis-cli set lesson:4:intro "$FILE"
+FILE=`cat data/4-1q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:q "$FILE"
+FILE=`cat data/4-1a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:a "$FILE"
+FILE=`cat data/4-2q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:q "$FILE"
+FILE=`cat data/4-2a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:a "$FILE"
+FILE=`cat data/4-3q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:q "$FILE"
+FILE=`cat data/4-3a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:a "$FILE"
+FILE=`cat data/4-4q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:q "$FILE"
+FILE=`cat data/4-4a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:a "$FILE"
+FILE=`cat data/4-5q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:q "$FILE"
+FILE=`cat data/4-5a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:4:a "$FILE"
+#
+# Lesson 5
+../redis-2.0.0-rc4/redis-cli set lesson:5:name Vignettes
+FILE=`cat data/5.html`
+../redis-2.0.0-rc4/redis-cli set lesson:5:intro "$FILE"
+FILE=`cat data/5-1q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:q "$FILE"
+FILE=`cat data/5-1a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:a "$FILE"
+FILE=`cat data/5-2q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:q "$FILE"
+FILE=`cat data/5-2a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:a "$FILE"
+FILE=`cat data/5-3q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:q "$FILE"
+FILE=`cat data/5-3a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:a "$FILE"
+FILE=`cat data/5-4q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:q "$FILE"
+FILE=`cat data/5-4a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:a "$FILE"
+FILE=`cat data/5-5q.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:q "$FILE"
+FILE=`cat data/5-5a.html`
+../redis-2.0.0-rc4/redis-cli rpush lesson:5:a "$FILE"

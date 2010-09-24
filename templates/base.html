@@ -7,7 +7,20 @@
 			body {
 				padding: 0;
 				margin: 0;
-				background-color: #ccaa77;
+				background-color: #888888;
+			}
+
+			a {
+				color: #0000ff;
+				text-decoration: none;
+			}
+
+			a:hover {
+				text-decoration: underline;
+			}
+
+			.current-link {
+				color: #880088;
 			}
 
 			#main {
@@ -15,7 +28,8 @@
 				height: 600px;
 				margin-left: auto;
 				margin-right: auto;
-				/* margin-top: 15px; */
+				margin-top: 10px; 
+				margin-bottom: auto;
 				background-color: #eeeeee;
 			}
 			
@@ -29,7 +43,7 @@
 				width: 225px;
 				height: 550px;
 				float: left;
-				background-color: #ddccaa;
+				background-color: #dddddd;
 			}
 			
 			#content {
@@ -39,17 +53,20 @@
 			}
 			
 			#content-body {
-				height: 425px;
-				width: 575px;
+				height: 405px;
+				width: 555px;
 				overflow: auto;
+				padding: 10px;
 				/* overflow: scroll; */
-				background-color: #ffeedd;
+				background-color: #ffffff;
+				text-align: center;
 			}
 
 			#content-menu {
-				height: 125px;
-				width: 575px;
-				background-color: #ccbb88;
+				height: 105px;
+				width: 555px;
+				padding: 10px;
+				background-color: #ffffff;
 				text-align: center;
 			}
 
@@ -58,13 +75,13 @@
 			}
 		</style>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<script src="/js/highcharts.js"></script>
 		<script>
 			var showLessonChoice=function(id) {
 				$('#lesson-'+id).toggle();
 			}
-		</script>
-		<% if(ctx=='home') { %>
-			<script>
+
+			<% if(ctx=='home') { %>
 				var showRegi=function() {
 					$('#content-body').html(
 						'Register<br>'+
@@ -75,11 +92,9 @@
 						'</form>'
 					);
 				};
-			</script>
 			<% } else if(ctx=='attempt') { %>
-			<script>
 				var lesson = {
-					intro: '<%=lesson.intro%>',
+					intro: <%=JSON.stringify(lesson.intro)%>,
 					q: [
 						<% for (var x=0; x<lesson.q.length; x++) { %>
 							[<%=x%>,'<%=lesson.q[x]%>','<%=lesson.a[x]%>']
@@ -103,11 +118,15 @@
 				}
 				var showQuestion = function() {
 					$('#content-body').html(lesson.q[cur][1]);
-					$('#content-menu').html('<button id="show-answer" onclick="showAnswer()">Show Answer</button>');
+					$('#content-menu').html(
+						'Think you know the answer?<br>'+
+						'<button id="show-answer" onclick="showAnswer()">Show Answer</button>');
 				};
 				var showAnswer = function() {
 					$('#content-body').html(lesson.q[cur][2]);
-					$('#content-menu').html('<button id="was-correct" onclick="processAnswer(true)">Yes</button><button id="was-incorrect" onclick="processAnswer(false)">No</button>');
+					$('#content-menu').html(
+						'Were you correct?<br>'+
+						'<button id="was-correct" onclick="processAnswer(true)">Yes</button><button id="was-incorrect" onclick="processAnswer(false)">No</button>');
 				};
 				var processAnswer = function(result) {
 					total++;
@@ -130,21 +149,22 @@
 					$.post('../../process-test', 
 						{ u_id:<%=u_id%>, l_id:<%=l_id%>, correct:correct, total:total, results:results },
 						function(data) {
-							$('#content-menu').html('<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/results/<%=l_id%>/';"+'">View Results</button>');
+							$('#content-menu').html(
+								'Check up on your progress?<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/results/<%=l_id%>/';"+'">View Results</button>');
 						});
 				};
 				$(document).ready(function() {
 					$('#content-body').html(lesson.intro);
 					$('#content-menu').html(
+						'Are you ready?<br>'+
 						'<button id="start-test" onclick="startTest()">'+
 							'Start the Test'+
 						'</button><br>'+
 						'<input type="checkbox" id="rand-check"> Random Question Order'
 					);
 				});
-			</script>
-		<% } else if (ctx=='view') { %>
-			<script>
+			<% } else if (ctx=='view') { %>
 				var lesson = {
 					intro: '<%=lesson.intro%>',
 					q: [
@@ -160,14 +180,37 @@
 					$('#content-body').html(lesson.intro);
 					$('#content-menu').html('<button id="show-intro">Intro</button>');
 				});
-			</script>
-		<% } else if (ctx=='results') { %>
-			<script src="/js/highcharts.js"></script>
-			<script>
+			<% } else if (ctx=='results') { %>
 				var results = <%=JSON.stringify(results)%>;
 				var chart;
 				$(document).ready(function() {
-					$('#content-menu').html('<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/test/<%=l_id%>/';"+'">Attempt Test Again</button>');
+					// Here's where we put the est advancement logic
+					if (results.length>2) {
+						var r1 = results[results.length-1];
+						var r2 = results[results.length-2];
+						var r3 = results[results.length-3];
+						if ((r1.total>r2.total)&&(r1.correct>r2.correct)&&(r2.total>r3.total)&&(r2.correct>r3.correct)&&(<%=l_id%><<%=l_list.length%>)) {
+							// Move Forward
+							$('#content-menu').html(
+								'Very good! You are ready for the next test.<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/test/<%=parseInt(l_id)+1%>/';"+'">Proceed to Next Test</button>');
+						} else if ((r1.total<r2.total)&&(r1.correct<r2.correct)&&(r2.total<r3.total)&&(r2.correct<r3.correct)&&(<%=l_id%>>1)) {
+							// Step Back
+							$('#content-menu').html(
+								'You are doing poorly at this stage. Try mastering the previous test before continuing<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/test/<%=l_id-1%>/';"+'">Attempt Previous Test</button>');
+						} else {
+							// Stay
+							$('#content-menu').html(
+								'Good. Now try the test again and beat your previous score.<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/test/<%=l_id%>/';"+'">Attempt Test Again</button>');
+						}
+					} else {
+						// Stay
+						$('#content-menu').html(
+							'Good. Now try the test again and beat your previous score.<br>'+
+							'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/test/<%=l_id%>/';"+'">Attempt Test Again</button>');
+					}
 					chart=new Highcharts.Chart({
 						chart: {
 							renderTo: 'chart',
@@ -247,8 +290,8 @@
 						]
 					});
 				});
-			</script>
-		<% } %>
+			<% } %>
+		</script>
 	</head>
 	<body>
 		<div id="main" notes="Centered main area">
@@ -258,56 +301,70 @@
 			<div id="main-body">
 				<div id="sidebar" notes="float that contextual bitch left!">
 					<ul>
-						<li><a href="/">Home</a></li>
+						<li>
+							<% if (ctx=='home') { %>
+								<a href="/" class="current-link">Home</a>
+							<% } else { %>
+								<a href="/">Home</a>
+							<% } %>
+						</li>
 						<li><a>Introduction</a></li>
 						<li>Lessons
 							<ul>
-								<li>
-								<a onclick="showLessonChoice(1)">1 Names</a>
-									<ul id="lesson-1" style="display:none;">
-										<li><a href="/test/1/">Test</a>&nbsp;</li>
-										<li><a href="/results/1/">Results</a>&nbsp;</li>
-										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
-									</ul>
-								</li>
-								<li>
-								<a onclick="showLessonChoice(2)">2 Definitions</a>
-									<ul id="lesson-2" style="display:none;">
-										<li><a href="/test/1/">Test</a>&nbsp;</li>
-										<li><a href="/results/1/">Results</a>&nbsp;</li>
-										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
-									</ul>
-								</li>
-								<li>
-								<a onclick="showLessonChoice(3)">3 Axioms</a>
-									<ul id="lesson-3" style="display:none;">
-										<li><a href="/test/1/">Test</a>&nbsp;</li>
-										<li><a href="/results/1/">Results</a>&nbsp;</li>
-										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
-									</ul>
-								</li>
-								<li>
-								<a onclick="showLessonChoice(4)">4 Sentences</a>
-									<ul id="lesson-4" style="display:none;">
-										<li><a href="/test/1/">Test</a>&nbsp;</li>
-										<li><a href="/results/1/">Results</a>&nbsp;</li>
-										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
-									</ul>
-								</li>
-								<li>
-								<a onclick="showLessonChoice(5)">5 Vignettes</a>
-									<ul id="lesson-5" style="display:none;">
-										<li><a href="/test/1/">Test</a>&nbsp;</li>
-										<li><a href="/results/1/">Results</a>&nbsp;</li>
-										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
-									</ul>
-								</li>
+								<% for (var x=0; x<l_list.length; x++) { %>
+									<% if (l_id==l_list[x].id) { %>
+										<li>
+											<a onclick="showLessonChoice(<%=l_list[x].id%>)" class="current-link"><%=l_list[x].id%> <%=l_list[x].name%></a>
+											<ul id="lesson-<%=l_list[x].id%>">
+												<% if (ctx=='attempt') { %>
+													<li><a href="/test/<%=l_list[x].id%>/" class="current-link">Test</a>&nbsp;</li>
+													<li><a href="/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+													<li><a href="/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+												<% } else if (ctx=='results') { %>
+													<li><a href="/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+													<li><a href="/results/<%=l_list[x].id%>/" class="current-link">Results</a>&nbsp;</li>
+													<li><a href="/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+												<% } else if (ctx=='view') { %>
+													<li><a href="/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+													<li><a href="/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+													<li><a href="/lesson/<%=l_list[x].id%>/" class="current-link">Study</a>&nbsp;</li>
+												<% } else { %>
+													<li><a href="/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+													<li><a href="/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+													<li><a href="/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+												<% } %>
+											</ul>
+										</li>
+									<% } else { %>
+										<li>
+											<a onclick="showLessonChoice(<%=l_list[x].id%>)"><%=l_list[x].id%> <%=l_list[x].name%></a>
+											<ul id="lesson-<%=l_list[x].id%>" style="display:none;">
+												<li><a href="/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+												<li><a href="/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+												<li><a href="/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+											</ul>
+										</li>
+									<% } %>
+								<% } %>
 							</ul>
 						</li>
 					</ul>
 				</div>
 				<div id="content" notes="">
 					<div id="content-body" notes="content area">
+						<% if (ctx=='home') { %>
+							<h3> Welcome to the Precision Teaching Center</h3>
+							<% if (u_id!=0) { %>
+								Greetings <%=u_name%>!<br>
+								Current Test <%=cur_test%><br>
+								<a href="/log-out/">Logout</a>
+							<% } %>
+						<% } else if (ctx=='results') { %>
+							<div id="chart" style="width:500; height:400px; margin: 0 auto;"></div>
+
+						<% } %>
+					</div>
+					<div id="content-menu" notes="fixed height bottom context menu">
 						<% if (ctx=='home') { %>
 							<% if (u_id==0) { %>
 								Login<br>
@@ -317,16 +374,13 @@
 									<input type="submit" value="Login">
 								</form>
 								<br>
+								Don't have an account?<br>
 								<button onclick="showRegi()">Register</button>
 							<% } else { %>
-								Greetings <%=u_name%>!
+								Are you ready?<br>
+								<button onclick="window.location.href='http://'+window.location.host+'/test/<%=parseInt(cur_test)%>/';">Start Testing!</button>
 							<% } %>
-						<% } else if (ctx=='results') { %>
-							<div id="chart" style="width:500; height:400px; margin: 0 auto;"></div>
-
 						<% } %>
-					</div>
-					<div id="content-menu" notes="fixed height bottom context menu">
 					</div>
 				</div>
 			</div>
