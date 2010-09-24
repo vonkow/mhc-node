@@ -34,6 +34,7 @@ exports.getLessonList = function(callback) {
 	var arr = [];
 	r.stream.addListener('connect', function() {
 		r.get('cur.lesson.id', function(err, id) {
+			sys.puts('cur.lesson.id: '+id);
 			id=parseInt(id);
 			var len=id+1;
 			for (var x=1;x<len;x++) {

@@ -83,11 +83,12 @@
 
 			<% if(ctx=='home') { %>
 				var showRegi=function() {
+					$('#content-menu').html(' ');
 					$('#content-body').html(
 						'Register<br>'+
 						'<form action="/add-user/" method="post">'+
-							'<input name="uname" type="text">'+
-							'<input name="pword" type="password">'+
+							'User Name: <input name="uname" type="text"><br>'+
+							'Password: <input name="pword" type="password"><br>'+
 							'<input type="submit" value="Register">'+
 						'</form>'
 					);
@@ -358,6 +359,17 @@
 								Greetings <%=u_name%>!<br>
 								Current Test <%=cur_test%><br>
 								<a href="/log-out/">Logout</a>
+							<% } else { %>
+								Login<br>
+								<form action="/try-login/" method="post">
+									User Name: <input name="uname" type="text"><br>
+									Password: <input name="pword" type="password"><br>
+									<input type="submit" value="Login">
+								</form>
+								<br>
+								Don't have an account?<br>
+								<button onclick="showRegi()">Register</button>
+
 							<% } %>
 						<% } else if (ctx=='results') { %>
 							<div id="chart" style="width:500; height:400px; margin: 0 auto;"></div>
@@ -367,15 +379,6 @@
 					<div id="content-menu" notes="fixed height bottom context menu">
 						<% if (ctx=='home') { %>
 							<% if (u_id==0) { %>
-								Login<br>
-								<form action="/try-login/" method="post">
-									<input name="uname" type="text">
-									<input name="pword" type="password">
-									<input type="submit" value="Login">
-								</form>
-								<br>
-								Don't have an account?<br>
-								<button onclick="showRegi()">Register</button>
 							<% } else { %>
 								Are you ready?<br>
 								<button onclick="window.location.href='http://'+window.location.host+'/test/<%=parseInt(cur_test)%>/';">Start Testing!</button>
