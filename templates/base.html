@@ -58,7 +58,25 @@
 			}
 		</style>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-		<% if(ctx=='attempt') { %>
+		<script>
+			var showLessonChoice=function(id) {
+				$('#lesson-'+id).toggle();
+			}
+		</script>
+		<% if(ctx=='home') { %>
+			<script>
+				var showRegi=function() {
+					$('#content-body').html(
+						'Register<br>'+
+						'<form action="/add-user/" method="post">'+
+							'<input name="uname" type="text">'+
+							'<input name="pword" type="password">'+
+							'<input type="submit" value="Register">'+
+						'</form>'
+					);
+				};
+			</script>
+			<% } else if(ctx=='attempt') { %>
 			<script>
 				var lesson = {
 					intro: '<%=lesson.intro%>',
@@ -73,6 +91,7 @@
 				};
 				var t,
 					cur = 0,
+					rand = false,
 					results = [],
 					total = 0,
 					correct = 0;
@@ -94,11 +113,14 @@
 					total++;
 					correct+=result;
 					results.push([lesson.q[cur][0],result]);
-					(++cur<lesson.q.length) || (cur=0,randomize());
+					(++cur<lesson.q.length) || (cur=0,(!rand||randomize()));
 					showQuestion();
 				};
 
 				var startTest=function() {
+					if ($('#rand-check').attr('checked')) {
+						rand=true;
+					};
 					t = setTimeout(endTest, 10000);
 					showQuestion();
 				}
@@ -113,7 +135,12 @@
 				};
 				$(document).ready(function() {
 					$('#content-body').html(lesson.intro);
-					$('#content-menu').html('<button id="start-test" onclick="startTest()">Start the Test</button>');
+					$('#content-menu').html(
+						'<button id="start-test" onclick="startTest()">'+
+							'Start the Test'+
+						'</button><br>'+
+						'<input type="checkbox" id="rand-check"> Random Question Order'
+					);
 				});
 			</script>
 		<% } else if (ctx=='view') { %>
@@ -140,6 +167,7 @@
 				var results = <%=JSON.stringify(results)%>;
 				var chart;
 				$(document).ready(function() {
+					$('#content-menu').html('<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/test/<%=l_id%>/';"+'">Attempt Test Again</button>');
 					chart=new Highcharts.Chart({
 						chart: {
 							renderTo: 'chart',
@@ -230,36 +258,51 @@
 			<div id="main-body">
 				<div id="sidebar" notes="float that contextual bitch left!">
 					<ul>
-						<li>Introduction</li>
-						<li>
-							1 Names <br>
-							<a href="/test/1/">Test</a>&nbsp;
-							<a href="/results/1/">Results</a>&nbsp;
-							<a href="/lesson/1/">Study</a>&nbsp;
-						</li>
-						<li>
-							2 Definitions <br>
-							<a href="/test/1/">Test</a>&nbsp;
-							<a href="/results/1/">Results</a>&nbsp;
-							<a href="/lesson/1/">Study</a>&nbsp;
-						</li>
-						<li>
-							3 Axioms <br>
-							<a href="/test/1/">Test</a>&nbsp;
-							<a href="/results/1/">Results</a>&nbsp;
-							<a href="/lesson/1/">Study</a>&nbsp;
-						</li>
-						<li>
-							4 Sentences <br>
-							<a href="/test/1/">Test</a>&nbsp;
-							<a href="/results/1/">Results</a>&nbsp;
-							<a href="/lesson/1/">Study</a>&nbsp;
-						</li>
-						<li>
-							5 Vignettes <br>
-							<a href="/test/1/">Test</a>&nbsp;
-							<a href="/results/1/">Results</a>&nbsp;
-							<a href="/lesson/1/">Study</a>&nbsp;
+						<li><a href="/">Home</a></li>
+						<li><a>Introduction</a></li>
+						<li>Lessons
+							<ul>
+								<li>
+								<a onclick="showLessonChoice(1)">1 Names</a>
+									<ul id="lesson-1" style="display:none;">
+										<li><a href="/test/1/">Test</a>&nbsp;</li>
+										<li><a href="/results/1/">Results</a>&nbsp;</li>
+										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
+									</ul>
+								</li>
+								<li>
+								<a onclick="showLessonChoice(2)">2 Definitions</a>
+									<ul id="lesson-2" style="display:none;">
+										<li><a href="/test/1/">Test</a>&nbsp;</li>
+										<li><a href="/results/1/">Results</a>&nbsp;</li>
+										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
+									</ul>
+								</li>
+								<li>
+								<a onclick="showLessonChoice(3)">3 Axioms</a>
+									<ul id="lesson-3" style="display:none;">
+										<li><a href="/test/1/">Test</a>&nbsp;</li>
+										<li><a href="/results/1/">Results</a>&nbsp;</li>
+										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
+									</ul>
+								</li>
+								<li>
+								<a onclick="showLessonChoice(4)">4 Sentences</a>
+									<ul id="lesson-4" style="display:none;">
+										<li><a href="/test/1/">Test</a>&nbsp;</li>
+										<li><a href="/results/1/">Results</a>&nbsp;</li>
+										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
+									</ul>
+								</li>
+								<li>
+								<a onclick="showLessonChoice(5)">5 Vignettes</a>
+									<ul id="lesson-5" style="display:none;">
+										<li><a href="/test/1/">Test</a>&nbsp;</li>
+										<li><a href="/results/1/">Results</a>&nbsp;</li>
+										<li><a href="/lesson/1/">Study</a>&nbsp;</li>
+									</ul>
+								</li>
+							</ul>
 						</li>
 					</ul>
 				</div>
@@ -267,17 +310,14 @@
 					<div id="content-body" notes="content area">
 						<% if (ctx=='home') { %>
 							<% if (u_id==0) { %>
+								Login<br>
 								<form action="/try-login/" method="post">
 									<input name="uname" type="text">
 									<input name="pword" type="password">
 									<input type="submit" value="Login">
 								</form>
 								<br>
-								<form action="/add-user/" method="post">
-									<input name="uname" type="text">
-									<input name="pword" type="password">
-									<input type="submit" value="Login">
-								</form>
+								<button onclick="showRegi()">Register</button>
 							<% } else { %>
 								Greetings <%=u_name%>!
 							<% } %>

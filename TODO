@@ -1,7 +1,6 @@
 Graph
-	Add Highcharts
-	Format Data
-	DIsplay Question by Question Results
+	Display Question by Question Results
+	Process Forward/Back logic
 
 View Lessons
 	Show Q/A
@@ -10,12 +9,8 @@ View Lessons
 Login/Register
 	Add Personal Data Fields
 
-Redirects
-
 Sidebar
 	Contextual
-
-Serve Dare Logo
 
 ---------------------------------
 
