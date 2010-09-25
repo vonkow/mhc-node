@@ -1,0 +1,432 @@
+<!DoCtYpE hTmL>
+<html>
+	<head>
+		<title>
+		</title>
+		<style>
+			body {
+				padding: 0;
+				margin: 0;
+				background-color: #888888;
+			}
+
+			a {
+				color: #0000ff;
+				text-decoration: none;
+			}
+
+			a:hover {
+				text-decoration: underline;
+			}
+
+			.current-link {
+				color: #880088;
+			}
+
+			#main {
+				width: 800px;
+				height: 600px;
+				margin-left: auto;
+				margin-right: auto;
+				margin-top: 10px; 
+				margin-bottom: auto;
+				background-color: #eeeeee;
+			}
+			
+			#main-header {
+				text-align: center;
+				background-color: #ffffff;
+				height: 50px;
+			}
+			
+			#sidebar {
+				width: 225px;
+				height: 550px;
+				float: left;
+				background-color: #dddddd;
+			}
+			
+			#content {
+				float: left;
+				height: 550px;
+				width: 575px;
+			}
+			
+			#content-body {
+				height: 405px;
+				width: 555px;
+				overflow: auto;
+				padding: 10px;
+				/* overflow: scroll; */
+				background-color: #ffffff;
+				text-align: center;
+			}
+
+			#content-menu {
+				height: 105px;
+				width: 555px;
+				padding: 10px;
+				background-color: #ffffff;
+				text-align: center;
+			}
+
+			#main-footer {
+				clear: both;
+				background-color: #dddddd;
+				text-align: center;
+			}
+		</style>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<script src="/js/highcharts.js"></script>
+		<script>
+			var showLessonChoice=function(id) {
+				$('#lesson-'+id).toggle();
+			}
+
+			<% if(ctx=='home') { %>
+				var showRegi=function() {
+					$('#content-menu').html(' ');
+					$('#content-body').html(
+						'<h3>Register</h3>'+
+						'<form action="/add-user/" method="post">'+
+							'User Name: <input name="uname" type="text">&nbsp;'+
+							'<input type="submit" value="Register">'+
+						'</form>'
+					);
+				};
+			<% } else if(ctx=='attempt') { %>
+				var lesson = {
+					intro: <%=JSON.stringify(lesson.intro)%>,
+					q: [
+						<% for (var x=0; x<lesson.q.length; x++) { %>
+							[<%=x%>,<%=JSON.stringify(''+lesson.q[x])%>,<%=JSON.stringify(''+lesson.a[x])%>, <%=lesson.k[x]%>]
+							<% if (x+1!=lesson.q.length) { %>
+								,
+							<% } %>
+						<% } %>
+					]
+				};
+				var t,
+					cur = 0,
+					rand = false,
+					results = [],
+					total = 0,
+					correct = 0;
+				function randOrd() {
+					return (Math.round(Math.random())-0.5); 
+				} 
+				var randomize = function() {
+					lesson.q = lesson.q.sort(randOrd);
+				}
+				var showQuestion = function() {
+					$('#content-body').html(lesson.q[cur][1]);
+					$('#content-menu').html(
+						'Think you know the answer?<br>'+
+						'<input id="type-answer" type="text"><br>'+
+						'<button id="show-answer" onclick="checkAnswer()">Submit Answer</button>');
+
+				};
+				var checkAnswer = function() {
+					var a = $('#type-answer').val();
+					<% if (l_id!=1) { %>
+						if (!parseInt(a)) {
+							a = a.toLowerCase();
+							switch (a) {
+								case 'primary':
+									a = 7;
+									break;
+								case 'concrete':
+									a = 8;
+									break;
+								case 'abstract':
+									a = 9;
+									break;
+								case 'formal':
+									a = 10;
+									break;
+								case 'systematic':
+									a = 11;
+									break;
+								case 'metasystematic':
+									a = 12;
+									break;
+								default:
+									a = 0;
+									break;
+							}
+						}
+						<% } %>
+					total++;
+					var cor = false;
+					if (a==lesson.q[cur][3]) {
+						correct++;
+						cor=true;
+					};
+					results.push([lesson.q[cur][0],cor]);
+					$('#content-body').html(lesson.q[cur][2]);
+					(++cur<lesson.q.length) || (cur=0,(!rand||randomize()));
+					if (cor) { 
+						$('#content-menu').html(
+							'Very Good! You were Correct<br>'+
+							'<button onclick="showQuestion()">Continue</button>');
+					} else {
+						$('#content-menu').html(
+							'Sorry, you were wrong. Try harder.<br>'+
+							'<button onclick="showQuestion()">Continue</button>');
+					}
+				};
+				var startTest=function() {
+					if ($('#rand-check').attr('checked')) {
+						rand=true;
+					};
+					t = setTimeout(endTest, 60000);
+					showQuestion();
+				}
+				var endTest = function() {
+					$('#content-body').html('You answered '+correct+' of '+total+' questions correctly.');
+					$('#content-menu').html('Submitting Results...');
+					$.post('../../../process-test', 
+						{ u_id:<%=u_id%>, l_id:<%=l_id%>, correct:correct, total:total, results:results },
+						function(data) {
+							$('#content-menu').html(
+								'Check up on your progress?<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/<%=u_id%>/results/<%=l_id%>/';"+'">View Results</button>');
+						});
+				};
+				$(document).ready(function() {
+					$('#content-body').html(lesson.intro);
+					$('#content-menu').html(
+						'Are you ready?<br>'+
+						'<button id="start-test" onclick="startTest()">'+
+							'Start the Test'+
+						'</button><br>'+
+						'<input type="checkbox" id="rand-check"> Random Question Order'
+					);
+				});
+			<% } else if (ctx=='view') { %>
+				var lesson = {
+					intro: <%=JSON.stringify(''+lesson.intro%>,
+					q: [
+						<% for (var x=0; x<lesson.q.length; x++) { %>
+							[<%=x%>,<%=JSON.stringify(''+lesson.q[x]%>),<%=JSON.stringify(''+lesson.a[x])%>]
+							<% if (x+1!=lesson.q.length) { %>
+								,
+							<% } %>
+						<% } %>
+					]
+				};
+				$(document).ready(function() {
+					$('#content-body').html(lesson.intro);
+					$('#content-menu').html('<button id="show-intro">Intro</button>');
+				});
+			<% } else if (ctx=='results') { %>
+				var results = <%=JSON.stringify(results)%>;
+				var chart;
+				$(document).ready(function() {
+					// Here's where we put the est advancement logic
+					if (results.length>2) {
+						var r1 = results[results.length-1];
+						var r2 = results[results.length-2];
+						var r3 = results[results.length-3];
+						if ((r1.total>r2.total)&&(r1.correct>r2.correct)&&
+							(r2.total>r3.total)&&(r2.correct>r3.correct)&&
+							(<%=l_id%><<%=l_list.length%>)) {
+							// Move Forward
+							$('#content-menu').html(
+								'Very good! You are ready for the next test.<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/<%=u_id%>/test/<%=parseInt(l_id)+1%>/';"+'">Proceed to Next Test</button>');
+						} else if ((r1.total<r2.total)&&(r1.correct<r2.correct)&&(<%=l_id%>>1)) {
+							// Step Back
+							$('#content-menu').html(
+								'You are doing poorly at this stage. Try mastering the previous test before continuing<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/<%=u_id%>/test/<%=l_id-1%>/';"+'">Attempt Previous Test</button>');
+						} else {
+							// Stay
+							$('#content-menu').html(
+								'Good. Now try the test again and beat your previous score.<br>'+
+								'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/<%=u_id%>/test/<%=l_id%>/';"+'">Attempt Test Again</button>');
+						}
+					} else {
+						// Stay
+						$('#content-menu').html(
+							'Good. Now try the test again and beat your previous score.<br>'+
+							'<button onclick="window.location.href='+"'http://'"+'+window.location.host+'+"'/<%=u_id%>/test/<%=l_id%>/';"+'">Attempt Test Again</button>');
+					}
+					chart=new Highcharts.Chart({
+						chart: {
+							renderTo: 'chart',
+							defaultSeriesType: 'column'
+						},
+						title: {
+							text: 'Results'
+						},
+						subtitle: {
+							text: 'Test <%=l_id%>'
+						},
+						xAxis: {
+							categories: [
+								<% for (var x=1;x<=results.length; x++) { %>
+									'<%=x%>'
+									<% if (x<results.length) { %>
+										,
+									<% } %>
+								<% } %>
+							],
+							title: {
+								text: 'Attempts'
+							}
+						},
+						yAxis: {
+							min: 0,
+							title: {
+								text: 'Questions'
+							}
+						},
+						legend: {
+							layout: 'vertical',
+							backgroundColor: '#FFFFFF',
+							align: 'left',
+							verticalAlign: 'top',
+							x: 100,
+							y: 50
+						},
+						tooltip: {
+							formatter: function() {
+								return '<b>Attempt '+this.x+'</b><br>'+
+										this.series.name+': '+this.y+'<br>'
+							}
+						},
+						plotOptions: {
+							column: {
+								pointPadding: 0.2,
+								borderWidth: 0
+							}
+						},
+						exporting: {
+							filename: '<%=u_name%>-test-results-lesson-<%=l_id%>'
+						},
+						series: [
+							{
+								name: 'Correct',
+								data: [
+									<% for (var x=0;x<results.length; x++) { %>
+										<%=results[x].correct%>
+										<% if (x+1<results.length) { %>
+											,
+										<% } %>
+									<% } %>
+								]
+							},
+							{
+								name: 'Total',
+								data: [
+									<% for (var x=0;x<results.length; x++) { %>
+										<%=results[x].total%>
+										<% if (x+1<results.length) { %>
+											,
+										<% } %>
+									<% } %>
+								]
+							}
+						]
+					});
+				});
+			<% } %>
+		</script>
+	</head>
+	<body>
+		<div id="main" notes="Centered main area">
+			<div id="main-header" notes="centered Dare logo">
+				<img src="/images/logo.gif">
+			</div>
+			<div id="main-body">
+				<div id="sidebar" notes="float that contextual bitch left!">
+					<ul>
+						<li>
+							<% if (ctx=='home') { %>
+								<a href="/<%=u_id%>" class="current-link">Home</a>
+							<% } else { %>
+								<a href="/<%=u_id%>">Home</a>
+							<% } %>
+						</li>
+						<li><a>Introduction</a></li>
+						<li>Lessons
+							<ul>
+								<% for (var x=0; x<l_list.length; x++) { %>
+									<% if (l_id==l_list[x].id) { %>
+										<li>
+											<a onclick="showLessonChoice(<%=l_list[x].id%>)" class="current-link"><%=l_list[x].id%> <%=l_list[x].name%></a>
+											<ul id="lesson-<%=l_list[x].id%>">
+												<% if (ctx=='attempt') { %>
+													<li><a href="/<%=u_id%>/test/<%=l_list[x].id%>/" class="current-link">Test</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+												<% } else if (ctx=='results') { %>
+													<li><a href="/<%=u_id%>/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/results/<%=l_list[x].id%>/" class="current-link">Results</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+												<% } else if (ctx=='view') { %>
+													<li><a href="/<%=u_id%>/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/lesson/<%=l_list[x].id%>/" class="current-link">Study</a>&nbsp;</li>
+												<% } else { %>
+													<li><a href="/<%=u_id%>/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+													<li><a href="/<%=u_id%>/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+												<% } %>
+											</ul>
+										</li>
+									<% } else { %>
+										<li>
+											<a onclick="showLessonChoice(<%=l_list[x].id%>)"><%=l_list[x].id%> <%=l_list[x].name%></a>
+											<ul id="lesson-<%=l_list[x].id%>" style="display:none;">
+												<li><a href="/<%=u_id%>/test/<%=l_list[x].id%>/">Test</a>&nbsp;</li>
+												<li><a href="/<%=u_id%>/results/<%=l_list[x].id%>/">Results</a>&nbsp;</li>
+												<li><a href="/<%=u_id%>/lesson/<%=l_list[x].id%>/">Study</a>&nbsp;</li>
+											</ul>
+										</li>
+									<% } %>
+								<% } %>
+							</ul>
+						</li>
+					</ul>
+				</div>
+				<div id="content" notes="">
+					<div id="content-body" notes="content area">
+						<% if (ctx=='home') { %>
+							<h3> Welcome to the Precision Teaching Center</h3>
+							<% if (u_id!=0) { %>
+								Greetings <%=u_name%>!<br>
+								<a href="/log-out/">Logout</a>
+							<% } else { %>
+								<form action="/try-login/" method="post">
+									User Name: <input name="uname" type="text">&nbsp;<input type="submit" value="Login">
+								</form>
+								<br>
+								Don't have an account?<br>
+								<button onclick="showRegi()">Register</button>
+
+							<% } %>
+						<% } else if (ctx=='results') { %>
+							<div id="chart" style="width:500; height:400px; margin: 0 auto;"></div>
+
+						<% } %>
+					</div>
+					<div id="content-menu" notes="fixed height bottom context menu">
+						<% if (ctx=='home') { %>
+							<% if (u_id==0) { %>
+								&nbsp;
+							<% } else { %>
+								Are you ready?<br>
+								<button onclick="window.location.href='http://'+window.location.host+'/<%=u_id%>/test/<%=parseInt(cur_test)%>/';">Start Testing!</button>
+							<% } %>
+						<% } %>
+					</div>
+				</div>
+			</div>
+			<div id="main-footer">
+			&copy; 2010 <a href="http://dareassociation.org">Dare Association, Inc.</a> All rights reserved.
+			</div>
+		</div>
+	</body>
+</html>

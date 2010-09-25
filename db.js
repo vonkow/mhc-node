@@ -21,7 +21,7 @@ exports.checkLogin = function(uname, pword, callback) {
 						});
 					} else {
 						// WRONG!!! Re-direct back to login
-						callback(false, 0, 0);
+						callback(false, id, 0);
 					};
 				})
 			};
@@ -34,7 +34,6 @@ exports.getLessonList = function(callback) {
 	var arr = [];
 	r.stream.addListener('connect', function() {
 		r.get('cur.lesson.id', function(err, id) {
-			sys.puts('cur.lesson.id: '+id);
 			id=parseInt(id);
 			var len=id+1;
 			for (var x=1;x<len;x++) {
@@ -45,6 +44,7 @@ exports.getLessonList = function(callback) {
 				} else {
 					r.get('lesson:'+x+':name', function(err, name) {
 						arr.push({'id':arr.length+1, 'name':''+name});
+						sys.puts('Got Lesson List');
 						r.close();
 					})
 				}
@@ -55,6 +55,39 @@ exports.getLessonList = function(callback) {
 		callback(arr);
 	});
 }
+
+exports.getIdByName = function(uname, callback) {
+	sys.puts('Get Id by Uname: '+uname);
+	var r = redis.createClient(),
+		uid;
+	r.stream.addListener('connect', function() {
+		r.get('user.by.uname:'+uname, function(err, id) {
+			sys.puts(uname+': '+id);
+			uid=(id||0);
+			r.close();
+		})
+	})
+	.addListener('end', function() {
+		sys.puts('Got Id: '+uid);
+		callback(uid);
+	});
+};
+
+exports.getNameById = function(uid, callback) {
+	sys.puts('Get Uname by Id: '+uid);
+	var r = redis.createClient(),
+		uname;
+	r.stream.addListener('connect', function() {
+		r.get('user:'+uid+':uname', function(err, name) {
+			uname=(name||0);
+			r.close();
+		})
+	})
+	.addListener('end', function() {
+		sys.puts('Got Uname: '+uname);
+		callback(uname);
+	});
+};
 
 /**
  * Gets requested lesson by id <br>
@@ -74,14 +107,17 @@ exports.getLesson = function(id, callback) {
 					obj.q=q;
 					r.lrange('lesson:'+id+':a', 0, -1, function(err, a) {
 						obj.a=a;
-						sys.puts("got lesson: "+id);
-						r.close();
+						r.lrange('lesson:'+id+':k', 0, -1, function(err, k) {
+							obj.k=k;
+							r.close();
+						})
 					});
 				});
 			});
 		});
 	})
 	.addListener('end', function() {
+		sys.puts("Got Lesson: "+id);
 		callback(obj);
 	});
 }
@@ -92,7 +128,6 @@ var getTest = function(r,obj,tot,cur,arr) {
 		r.get(s+':total', function(err, total) {
 			r.get(s+':correct', function(err, correct) {
 				r.get(s+':results', function(err, results) {
-					sys.puts(results);
 					arr.push({
 						test_date: ''+test_date,
 						total: ''+total,
@@ -115,12 +150,11 @@ exports.getTestResults = function(obj, callback) {
 	sys.puts('GET TEST RESULTS');
 	sys.puts('User: '+obj.uid);
 	sys.puts('Test: '+obj.test);
-	sys.puts('');
 	var arr = [],
 		r = redis.createClient();
 	r.stream.addListener('connect', function() {
 		r.get('user:'+obj.uid+':tests:'+obj.test+':cur.attempt', function(err, tot) {
-			sys.puts(tot);
+			sys.puts('Attempts: '+tot);
 			getTest(r,obj,tot,1,arr);
 		})
 	}).addListener('end', function() {
@@ -137,10 +171,11 @@ exports.addLesson = function(obj, callback) {
 			r.set('lesson:'+id+':intro', obj.intro, function() {});
 			for (var x=0;x<obj.q.length;x++) {
 				r.rpush('lesson:'+id+':q', obj.q[x], function(){});
+				r.rpush('lesson:'+id+':a', obj.a[x], function(){});
 				if (x+1!=obj.q.length) {
-					r.rpush('lesson:'+id+':a', obj.a[x], function(){});
+					r.rpush('lesson:'+id+':k', obj.a[x], function(){});
 				} else {
-					r.rpush('lesson:'+id+':a', obj.a[x], function(){
+					r.rpush('lesson:'+id+':k', obj.a[x], function(){
 						r.close();
 					});
 				}
@@ -158,7 +193,7 @@ exports.addUser = function(obj, callback) {
 		r.incr('cur.user.id', function(err, id) {
 			r.set('user:'+id+':uname', obj.uname, function() {
 				r.set('user.by.uname:'+obj.uname, id, function(){
-					r.set('user:'+id+':pword', obj.pword, function(){
+					r.set('user:'+id+':pword', ' ', function(){
 						r.set('user:'+id+':cur.test', 1, function() {
 							callback(obj);
 						});
@@ -170,7 +205,6 @@ exports.addUser = function(obj, callback) {
 };
 
 exports.addTestAttempt = function(obj, callback) {
-	sys.puts(JSON.stringify(obj.results));
 	var r = redis.createClient();
 	r.stream.addListener('connect', function() {
 		r.incr('user:'+obj.u_id+':tests:'+obj.l_id+':cur.attempt', function(err, att) {
@@ -180,13 +214,15 @@ exports.addTestAttempt = function(obj, callback) {
 					r.set(s+':correct', obj.correct, function() {
 						r.set(s+':results', ''+JSON.stringify(obj.results), function() {
 							r.set('user:'+obj.u_id+':cur.test', obj.l_id, function() {
+								sys.puts('Set Test Attempt: '+att+', User: '+obj.u_id+', Test: '+obj.l_id);
 								r.close();
-								callback();
 							})
 						})
 					})
 				})
 			})
 		})
+	}).addListener('end', function() {
+		callback();
 	})
 };

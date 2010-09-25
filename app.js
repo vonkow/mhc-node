@@ -57,78 +57,92 @@ var serveLessonList = function(req, res) {
 	})
 };
 
-var showHome = function(req, res) {
-	db.getLessonList(function(l_list) {
-		sys.puts('Displaying Home');
-		render(res, 'templates/base.html', {
-			ctx:'home',
-			u_id:(req.session['uid']||0),
-			u_name: (req.session['uname']||''),
-			cur_test : (req.session['cur_test']||0),
-			l_id: 0,
-			l_list: l_list
-		})
-	});
-};
-
-var showLesson = function(req,res,l_id) {
-	db.getLessonList(function(l_list) {
-		db.getLesson(l_id, function(lesson) {
-			sys.puts('attempting render')
+var showHome = function(req, res, u_id) {
+	if (!u_id) var u_id=0;
+	db.getNameById(u_id, function(u_name) {
+		db.getLessonList(function(l_list) {
+			sys.puts('Displaying Home');
+			sys.puts('User: '+u_id+'/'+u_name);
 			render(res, 'templates/base.html', {
-				ctx:'view',
-				lesson:lesson,
-				u_id:(req.session['uid']||0),
-				u_name: (req.session['uname']||''),
-				l_id:l_id,
-				l_list:l_list
+				ctx:'home',
+				u_id:u_id,
+				u_name: u_name,
+				cur_test : 1,
+				l_id: 0,
+				l_list: l_list
 			})
 		})
 	})
 };
 
-var attemptTest = function(req, res, l_id) {
-	if (req.session['login'] == true) {
-		req.session['cur_test'] = l_id;
+var showLesson = function(req,res, u_id,l_id) {
+	db.getNameById(u_id, function(u_name) {
 		db.getLessonList(function(l_list) {
 			db.getLesson(l_id, function(lesson) {
+				sys.puts('Showing Lesson: '+l_id+' to User: '+u_id);
 				render(res, 'templates/base.html', {
-					ctx:'attempt',
-					lesson: lesson,
-					l_id: l_id,
-					l_list: l_list,
-					u_id: req.session['uid'],
-					u_name: req.session['uname']
-				});
-			})
-		});
-	} else {
-		redirectHome(res);
-	}
-};
-
-var showTestResults = function(req, res, l_id) {
-	if (req.session['login'] == true) {
-		db.getLessonList(function(l_list) {
-			db.getLesson(l_id, function(lesson) {
-				db.getTestResults({
-					uid: req.session['uid'],
-					test: l_id
-				}, function(results) {
-					render(res, 'templates/base.html', {
-						ctx:'results',
-						results: results,
-						lesson: lesson,
-						l_id: l_id,
-						l_list: l_list,
-						u_id: req.session['uid'],
-						u_name: req.session['uname']
-					});
+					ctx:'view',
+					lesson:lesson,
+					u_id:u_id,
+					u_name: u_name,
+					l_id:l_id,
+					l_list:l_list
 				})
 			})
 		})
+	})
+};
+
+var attemptTest = function(req, res, u_id, l_id) {
+	//if (req.session['login'] == true) {
+	if (u_id==0) {
+		redirectHome(res, 0);
 	} else {
-		redirectHome(res);
+			//req.session['cur_test'] = l_id;
+		db.getNameById(u_id, function(u_name) {
+			db.getLessonList(function(l_list) {
+				db.getLesson(l_id, function(lesson) {
+					sys.puts('Testing Lesson: '+l_id+' on User: '+u_id);
+					render(res, 'templates/base.html', {
+						ctx:'attempt',
+						lesson: lesson,
+						l_id: l_id,
+						l_list: l_list,
+						u_id: u_id,
+						u_name: u_name
+					});
+				})
+			})
+		});
+	}
+};
+
+var showTestResults = function(req, res, u_id, l_id) {
+	//if (req.session['login'] == true) {
+	if (u_id==0) {
+		redirectHome(res, 0);
+	} else {
+		db.getNameById(u_id, function(u_name) {
+			db.getLessonList(function(l_list) {
+				db.getLesson(l_id, function(lesson) {
+					db.getTestResults({
+						uid: u_id,
+						test: l_id
+					}, function(results) {
+						render(res, 'templates/base.html', {
+							ctx:'results',
+							results: results,
+							lesson: lesson,
+							l_id: l_id,
+							l_list: l_list,
+							u_id: u_id,
+							u_name: u_name
+						});
+					})
+				})
+			})
+		})
+
 	}
 };
 
@@ -144,15 +158,17 @@ var processTest = function(req, res) {
 
 var tryLogin = function(req, res) {
 	getPostParams(req, function(obj) {
-		db.checkLogin(obj.uname, obj.pword, function(ok, id, cur_test) {
-			if (ok) {
-				req.session['login'] = true;
-				req.session['uid'] = id;
-				req.session['uname'] = obj.uname;
-				req.session['cur_test'] = cur_test;
-				sys.puts('login ok');
-			}
-			redirectHome(res);
+		db.getIdByName(obj.uname, function(id) {
+		//db.checkLogin(obj.uname, obj.pword, function(ok, id, cur_test) {
+			//if (ok) {
+				//req.session['login'] = true;
+				//req.session['uid'] = id;
+				//req.session['uname'] = obj.uname;
+				//req.session['cur_test'] = cur_test;
+				//sys.puts('login ok');
+			//}
+			sys.puts('User: '+id+' Login');
+			redirectHome(res, id);
 		})
 	})
 }
@@ -160,50 +176,49 @@ var tryLogin = function(req, res) {
 var registerUser = function(req, res) {
 	getPostParams(req, function(obj) {
 		db.addUser(obj, function(obj) {
-			sys.puts('user added');
-			sys.puts(req);
-			sys.puts(res);
 			db.checkLogin(obj.uname, obj.pword, function(ok, id) {
-				if (ok) {
-					req.session['login'] = true;
-					req.session['uid'] = id;
-					req.session['uname'] = obj.uname;
-					req.session['cur_test'] = 1;
-					sys.puts('login ok');
-				}
-				redirectHome(res);
+				//if (ok) {
+					////req.session['login'] = true;
+					//req.session['uid'] = id;
+					//req.session['uname'] = obj.uname;
+					//req.session['cur_test'] = 1;
+					//sys.puts('login ok');
+				//}
+				sys.puts('User: '+id+' Added');
+				redirectHome(res, id);
 			})
 		})
 	})
 };
 
 var logOut = function(req, res) {
-	req.session['login'] = false;
-	req.session['uid'] = 0;
-	req.session['uname'] = '';
-	redirectHome(res);
+	sys.puts('User Logoff');
+	//req.session['login'] = false;
+	//req.session['uid'] = 0;
+	//req.session['uname'] = '';
+	redirectHome(res, 0);
 };
 
 
-var redirectHome = function(res) {
-	sys.puts('serving redirect');
+var redirectHome = function(res, u_id) {
+	sys.puts('Serving User: '+u_id+'Redirect');
 	res.writeHead(200, {'Content-Type': 'text/html'});
-	res.write("<!doctype html><html><body><script>window.location.replace('http://127.0.0.1:8000/');</script></body></html>\n", 'utf8');
+	res.write("<!doctype html><html><body><script>window.location.href='http://'+window.location.host+'/"+u_id+"';</script></body></html>\n", 'utf8');
 	res.end();
 }
 
 // Url
 nerve.create([
-	//[ nerve.post("/add-user"), addUser ],
 	[ '/', showHome ],
 	[ '/log-out/', logOut ],
-	[ nerve.get(/^\/lesson\/([0-9]+)/), showLesson ],
+	[ nerve.get(/^\/([0-9]+)\/lesson\/([0-9]+)/), showLesson ],
 	[ nerve.post("/add-lesson"), createLesson ],
 	[ nerve.post('/try-login/'), tryLogin ],
 	[ nerve.post('/add-user/'), registerUser ],
 	[ nerve.post('/process-test'), processTest ],
-	[ nerve.get(/^\/results\/([0-9]+)/), showTestResults ],
-	[ nerve.get(/^\/test\/([0-9]+)/), attemptTest ],
+	[ nerve.get(/^\/([0-9]+)\/results\/([0-9]+)/), showTestResults ],
+	[ nerve.get(/^\/([0-9]+)\/test\/([0-9]+)/), attemptTest ],
+	[ nerve.get(/^\/([0-9]+)/), showHome ],
 	[ "/images/logo.gif", serveLogo ],
 	[ "/js/highcharts.js", serveHighcharts ]
 ], {session_duration:3600000}).listen(8000);
